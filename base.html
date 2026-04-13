@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" {% if rtl %}dir="rtl"{% endif %}>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>{% block title %}ADPI{% endblock %}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0a1628;--navy-l:#132040;--navy-ll:#1e3060;--gold:#c9a84c;--gold-pale:#faf6ec;--gold-border:#e0c87a;--blue:#1a5fa8;--ink:#1a1a1a;--muted:#555;--hint:#888;--border:#e0e0e0;--bg:#f6f8fc}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink)}
+{% if rtl %}body{direction:rtl;font-family:'Segoe UI',Tahoma,Arial,sans-serif}{% endif %}
+a{text-decoration:none;color:inherit}
+
+.topbar{background:var(--navy);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(201,168,76,0.15)}
+
+/* Linha 1: Logo (fundo branco) + à direita nada */
+.topbar-row1{
+  display:flex;align-items:center;height:56px;
+  background:#fff;
+  padding:0 1.5rem;
+  border-bottom:2px solid rgba(201,168,76,0.3);
+}
+.topbar-logo-wrap{
+  display:flex;align-items:center;
+  text-decoration:none;
+}
+.topbar-logo-wrap img{height:40px;width:auto;display:block}
+.topbar-row1-right{flex:1}
+
+/* Linha 2: Bandeiras (esquerda) + Portal/Admin (direita, mesmo nível) */
+.topbar-row2{
+  background:rgba(0,0,0,0.25);
+  border-top:1px solid rgba(255,255,255,0.05);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1rem;
+  min-height:36px;
+}
+.lang-bar{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  white-space:nowrap;display:flex;align-items:center;
+}
+.lang-bar::-webkit-scrollbar{display:none}
+.lang-bar-inner{display:inline-flex;gap:4px;padding:4px 0;align-items:center}
+.lp{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;
+  cursor:pointer;text-decoration:none;
+  transition:all 0.15s;
+  border:2px solid transparent;
+  opacity:0.55;overflow:hidden;flex-shrink:0;
+}
+.lp:hover{opacity:1;transform:scale(1.1)}
+.lp.active{opacity:1;border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,168,76,0.3)}
+.lp img{width:100%;height:100%;object-fit:cover;display:block}
+.topbar-nav{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.nav-link{
+  padding:5px 12px;border-radius:4px;font-size:12px;font-weight:500;
+  color:rgba(255,255,255,0.65);transition:all 0.15s;
+}
+.nav-link:hover{background:rgba(255,255,255,0.08);color:#fff}
+.nav-link.admin{
+  background:rgba(201,168,76,0.15);color:var(--gold);
+  border:1px solid rgba(201,168,76,0.3);
+}
+.nav-link.admin:hover{background:rgba(201,168,76,0.25)}
+
+.flash{padding:10px 1.5rem;font-size:13px;text-align:center}
+.flash.success{background:#e6f4ea;color:#1a5c2a;border-bottom:1px solid #b8dfc0}
+.flash.error{background:#fde8e8;color:#a0281e;border-bottom:1px solid #f5c6c6}
+{% block extra_style %}{% endblock %}
+</style>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-row1">
+    <a href="/" class="topbar-logo-wrap">
+      <img src="/static/adpi-logo-nav.png" alt="ADPI"/>
+    </a>
+  </div>
+  <div class="topbar-row2">
+    <div class="lang-bar">
+      <div class="lang-bar-inner">
+        {% set flag_urls = {
+          'pt': 'https://flagcdn.com/w40/pt.png',
+          'ar': 'https://flagcdn.com/w40/ae.png',
+          'en': 'https://flagcdn.com/w40/gb.png',
+          'es': 'https://flagcdn.com/w40/es.png',
+          'fr': 'https://flagcdn.com/w40/fr.png',
+          'de': 'https://flagcdn.com/w40/de.png',
+          'it': 'https://flagcdn.com/w40/it.png'
+        } %}
+        {% for code, info in languages.items() %}
+        <a href="/lang/{{ code }}" class="lp {% if code == lang %}active{% endif %}" title="{{ info['full'] }}">
+          <img src="{{ flag_urls[code] }}" alt="{{ info['full'] }}"/>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="topbar-nav">
+      <a href="/" class="nav-link">{{ ui.investor_portal }}</a>
+      <a href="/admin" class="nav-link admin">{{ ui.admin_access }}</a>
+    </div>
+  </div>
+</nav>
+{% with messages=get_flashed_messages(with_categories=true) %}
+  {% for category,message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
+{% block content %}{% endblock %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ADPI Admin{% endblock %}
+{% block extra_style %}
+.wrap{max-width:1100px;margin:2rem auto;padding:0 1.5rem}
+.pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
+.pg-head h2{font-size:18px;font-weight:700;color:var(--ink)}
+.pg-head p{font-size:12px;color:var(--muted);margin-top:2px}
+.btn-p{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:7px;background:var(--navy);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;transition:background 0.15s}
+.btn-p:hover{background:var(--navy-ll)}
+.btn-s{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:7px;background:#fff;color:var(--ink);border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;text-decoration:none;transition:all 0.15s}
+.btn-s:hover{background:var(--bg)}
+.btn-del{display:inline-flex;align-items:center;padding:6px 10px;border-radius:6px;background:#fff3f3;color:#a0281e;border:1px solid #f5c6c6;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.btn-del:hover{background:#fde8e8}
+.btn-edit{display:inline-flex;align-items:center;padding:6px 12px;border-radius:6px;background:var(--bg);color:var(--navy);border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.15s}
+.btn-edit:hover{background:#e8eef8}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat{background:#fff;border:1px solid var(--border);border-radius:9px;padding:1rem 1.25rem}
+.stat-l{font-size:11px;color:var(--hint);margin-bottom:4px}
+.stat-v{font-size:24px;font-weight:800;color:var(--ink)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.tbl{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tbl-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 120px;padding:10px 1.25rem;background:var(--bg);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--hint);letter-spacing:0.05em;text-transform:uppercase}
+.tbl-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 120px;padding:13px 1.25rem;border-bottom:1px solid var(--border);align-items:center;transition:background 0.12s}
+.tbl-row:last-child{border-bottom:none}
+.tbl-row:hover{background:#fafbfd}
+.rt{font-size:13px;font-weight:700;color:var(--ink)}
+.rs{font-size:11px;color:var(--muted);margin-top:2px}
+.rc{font-size:12px;color:var(--muted)}
+.ri{font-size:13px;font-weight:700;color:var(--navy)}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.b-dsp{background:#e6f4ea;color:#1a5c2a}
+.b-anl{background:#fef3dc;color:#7a4e00}
+.b-rsv{background:#e8f0fb;color:#1a4a9a}
+.f10{background:rgba(201,168,76,0.15);color:#7a5c00;border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700}
+.f20{background:rgba(26,95,168,0.1);color:#1a4a9a;border:1px solid rgba(26,95,168,0.25);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700}
+.row-act{display:flex;gap:6px}
+.empty-row{padding:2.5rem;text-align:center;color:var(--hint);font-size:13px}
+@media(max-width:800px){.stats{grid-template-columns:1fr 1fr}.tbl-head{display:none}.tbl-row{grid-template-columns:1fr;gap:4px}}
+{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="pg-head">
+    <div>
+      <h2>{{ ui.dashboard_title }}</h2>
+      <p>{{ ui.dashboard_sub }}</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a href="/admin/nova" class="btn-p">{{ ui.new_opp }}</a>
+      <a href="/admin/logout" class="btn-s">{{ ui.logout }}</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-l">{{ ui.total_opps }}</div>
+      <div class="stat-v">{{ stats.total }}</div>
+      <div class="stat-sub">{{ ui.published }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">{{ ui.total_invest }}</div>
+      <div class="stat-v" style="font-size:17px;padding-top:4px">€ {{ "{:,.0f}".format(stats.investimento).replace(",",".") }}</div>
+      <div class="stat-sub">{{ ui.sum_projects }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">{{ ui.total_jobs }}</div>
+      <div class="stat-v">{{ stats.jobs }}</div>
+      <div class="stat-sub">{{ ui.direct_creation }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-l">{{ ui.sectors }}</div>
+      <div class="stat-v">{{ stats.sectors }}</div>
+      <div class="stat-sub">{{ ui.areas }}</div>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <div class="tbl-head">
+      <span>{{ ui.opp_label }}</span><span>{{ ui.phase_label }}</span><span>{{ ui.sector_col }}</span><span>{{ ui.municipio_col }}</span><span>{{ ui.total_invest }}</span><span>{{ ui.actions_label }}</span>
+    </div>
+    {% if opportunities %}
+      {% for opp in opportunities %}
+      {% set bc='b-dsp' if 'dispo' in opp.estado.lower() else ('b-anl' if 'anal' in opp.estado.lower() else 'b-rsv') %}
+      {% set fc='f10' if '1.0' in opp.get('fase','') else 'f20' %}
+      <div class="tbl-row">
+        <div>
+          <div class="rt">{{ opp.titulo }}</div>
+          <div class="rs">{{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} ha{% endif %} · <span class="badge {{ bc }}">{% if 'dispo' in opp.estado.lower() %}{{ ui.estado_disponivel }}{% elif 'anal' in opp.estado.lower() %}{{ ui.estado_analise }}{% else %}{{ ui.estado_reservado }}{% endif %}</span></div>
+        </div>
+        <div><span class="{{ fc }}">{{ opp.get('fase','—') }}</span></div>
+        <div class="rc" style="font-size:11px">{{ opp.sector.split(' ')[0] }}</div>
+        <div class="rc">{{ opp.municipio }}</div>
+        <div class="ri">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div>
+        <div class="row-act">
+          <a href="/admin/editar/{{ opp.id }}" class="btn-edit">✎ {{ ui.edit }}</a>
+          <form method="post" action="/admin/eliminar/{{ opp.id }}" onsubmit="return confirm('{{ ui.delete_confirm }}')">
+            <button type="submit" class="btn-del">✕</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-row">{{ ui.no_results }} <a href="/admin/nova" style="color:var(--blue)">{{ ui.new_opp }} →</a></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
