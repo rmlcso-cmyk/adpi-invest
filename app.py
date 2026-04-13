@@ -253,10 +253,19 @@ def index():
     q = request.args.get('q','')
     raw_opps = get_all_opps(sector, fase, q)
     opps = [translate_opp(parse_opp(o), lang) for o in raw_opps]
-    used_sectors = sorted(set(o['sector'].split(' ')[0] for o in get_all_opps()))
     ui = translate_ui(lang)
+    # Sectores em PT para filtros (usados na URL) + traduzidos para display
+    all_raw = get_all_opps()
+    raw_sectors = sorted(set(o['sector'].split(' ')[0] for o in all_raw))
+    # Traduzir sectores para display
+    from translations import _google
+    if lang != 'pt':
+        display_sectors = [(s, _google(s, lang, 'pt')) for s in raw_sectors]
+    else:
+        display_sectors = [(s, s) for s in raw_sectors]
     return render_template('portal.html', opportunities=opps,
-                           sectors=used_sectors, sector=sector, fase=fase, q=q,
+                           sectors=raw_sectors, display_sectors=display_sectors,
+                           sector=sector, fase=fase, q=q,
                            ui=ui, lang=lang, languages=LANGUAGES,
                            rtl=LANGUAGES[lang]['rtl'])
 

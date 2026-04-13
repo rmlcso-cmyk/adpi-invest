@@ -69,8 +69,8 @@
 <div class="filters">
   <div class="filters-inner">
     <a href="/?{% if fase %}fase={{ fase }}{% endif %}" class="chip {% if not sector %}active{% endif %}">{{ ui.all_sectors }}</a>
-    {% for s in sectors %}
-    <a href="/?sector={{ s }}{% if fase %}&fase={{ fase }}{% endif %}" class="chip {% if sector and sector.lower() in s.lower() %}active{% endif %}">{{ s }}</a>
+    {% for raw_s, disp_s in display_sectors %}
+    <a href="/?sector={{ raw_s }}{% if fase %}&fase={{ fase }}{% endif %}" class="chip {% if sector and sector.lower() in raw_s.lower() %}active{% endif %}">{{ disp_s }}</a>
     {% endfor %}
     <form class="search-form" method="get">
       {% if sector %}<input type="hidden" name="sector" value="{{ sector }}"/>{% endif %}
