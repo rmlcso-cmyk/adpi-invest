@@ -6,8 +6,8 @@ CACHE = {}
 # Ordem: PT, EN, AR, depois resto
 LANGUAGES = {
     'pt': {'flag': '🇵🇹', 'rtl': False, 'full': 'Português', 'google': 'pt'},
-    'en': {'flag': '🇬🇧', 'rtl': False, 'full': 'English',   'google': 'en'},
     'ar': {'flag': '🇦🇪', 'rtl': True,  'full': 'العربية',   'google': 'ar'},
+    'en': {'flag': '🇬🇧', 'rtl': False, 'full': 'English',   'google': 'en'},
     'es': {'flag': '🇪🇸', 'rtl': False, 'full': 'Español',   'google': 'es'},
     'fr': {'flag': '🇫🇷', 'rtl': False, 'full': 'Français',  'google': 'fr'},
     'de': {'flag': '🇩🇪', 'rtl': False, 'full': 'Deutsch',   'google': 'de'},
