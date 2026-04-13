@@ -1,7 +1,6 @@
 import os
 import uuid
 import json
-import urllib.parse as up
 from datetime import datetime
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
@@ -35,14 +34,31 @@ MUNICIPIOS = [
 
 # ---------- DB ----------
 
+def parse_db_url(url):
+    # Format: postgresql://user:pass@host:port/dbname
+    # Handles special chars in password
+    url = url.replace('postgresql://', '').replace('postgres://', '')
+    userinfo, rest = url.split('@', 1)
+    user, password = userinfo.split(':', 1)
+    hostport, dbname = rest.split('/', 1)
+    if ':' in hostport:
+        host, port = hostport.rsplit(':', 1)
+        port = int(port)
+    else:
+        host = hostport
+        port = 5432
+    # Remove query params from dbname
+    dbname = dbname.split('?')[0]
+    return user, password, host, port, dbname
+
 def get_conn():
-    r = up.urlparse(DATABASE_URL)
+    user, password, host, port, dbname = parse_db_url(DATABASE_URL)
     return pg8000.connect(
-        host=r.hostname,
-        port=r.port or 5432,
-        database=r.path[1:],
-        user=r.username,
-        password=r.password,
+        host=host,
+        port=port,
+        database=dbname,
+        user=user,
+        password=password,
         ssl_context=True
     )
 
@@ -193,7 +209,7 @@ def delete_opp(opp_id):
 def get_stats():
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) as total, COALESCE(SUM(investimento),0) as invest, COALESCE(SUM(jobs),0) as jobs, COUNT(DISTINCT sector) as sectors FROM opportunities")
+    cur.execute("SELECT COUNT(*), COALESCE(SUM(investimento),0), COALESCE(SUM(jobs),0), COUNT(DISTINCT sector) FROM opportunities")
     row = cur.fetchone()
     cur.close()
     conn.close()
