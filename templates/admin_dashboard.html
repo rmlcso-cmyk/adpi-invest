@@ -79,12 +79,12 @@
     </div>
     {% if opportunities %}
       {% for opp in opportunities %}
-      {% set bc='b-dsp' if opp.estado=='Disponível' else ('b-anl' if opp.estado=='Em análise' else 'b-rsv') %}
+      {% set bc='b-dsp' if 'dispo' in opp.estado.lower() else ('b-anl' if 'anal' in opp.estado.lower() else 'b-rsv') %}
       {% set fc='f10' if '1.0' in opp.get('fase','') else 'f20' %}
       <div class="tbl-row">
         <div>
           <div class="rt">{{ opp.titulo }}</div>
-          <div class="rs">{{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} ha{% endif %} · <span class="badge {{ bc }}">{{ opp.estado }}</span></div>
+          <div class="rs">{{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} ha{% endif %} · <span class="badge {{ bc }}">{% if 'dispo' in opp.estado.lower() %}{{ ui.estado_disponivel }}{% elif 'anal' in opp.estado.lower() %}{{ ui.estado_analise }}{% else %}{{ ui.estado_reservado }}{% endif %}</span></div>
         </div>
         <div><span class="{{ fc }}">{{ opp.get('fase','—') }}</span></div>
         <div class="rc" style="font-size:11px">{{ opp.sector.split(' ')[0] }}</div>
