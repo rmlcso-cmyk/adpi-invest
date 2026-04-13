@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: adpi-invest
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        value: admin
+      - key: DATABASE_URL
+        sync: false
