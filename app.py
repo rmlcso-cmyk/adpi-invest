@@ -1,13 +1,13 @@
 import os
 import uuid
 import json
+import urllib.parse as up
 from datetime import datetime
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, send_from_directory)
 from werkzeug.utils import secure_filename
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import pg8000
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'adpi-secret-2026')
@@ -36,10 +36,24 @@ MUNICIPIOS = [
 # ---------- DB ----------
 
 def get_conn():
-    url = DATABASE_URL
-    if '?' not in url:
-        url += '?sslmode=require'
-    return psycopg2.connect(url, cursor_factory=RealDictCursor)
+    r = up.urlparse(DATABASE_URL)
+    return pg8000.connect(
+        host=r.hostname,
+        port=r.port or 5432,
+        database=r.path[1:],
+        user=r.username,
+        password=r.password,
+        ssl_context=True
+    )
+
+def fetchall_dict(cur):
+    cols = [d[0] for d in cur.description]
+    return [dict(zip(cols, row)) for row in cur.fetchall()]
+
+def fetchone_dict(cur):
+    cols = [d[0] for d in cur.description]
+    row = cur.fetchone()
+    return dict(zip(cols, row)) if row else None
 
 def init_db():
     conn = get_conn()
@@ -58,27 +72,26 @@ def init_db():
             horizonte TEXT,
             fase TEXT DEFAULT 'Phase 1.0',
             estado TEXT DEFAULT 'Disponível',
-            photos JSONB DEFAULT '[]',
-            docs JSONB DEFAULT '[]',
+            photos TEXT DEFAULT '[]',
+            docs TEXT DEFAULT '[]',
             created_at TIMESTAMP DEFAULT NOW()
         )
     """)
-    # Seed se vazio
-    cur.execute("SELECT COUNT(*) as c FROM opportunities")
-    count = cur.fetchone()['c']
+    cur.execute("SELECT COUNT(*) FROM opportunities")
+    count = cur.fetchone()[0]
     if count == 0:
         seeds = [
             ("Herdade Vale do Guadiana","Agricultura & Segurança Alimentar","Serpa",
              "Propriedade de 450 ha com aptidão agrícola e olivicultura intensiva. Infraestruturas de rega e armazéns modernos. Potencial para produção de azeite premium com certificação DOP, criação de emprego local e exportação alinhada com a estratégia de segurança alimentar dos Emirados Árabes Unidos.",
              3500000,450,35,"12-16% ao ano","5-7 anos","Phase 1.0 — Real Estate","Disponível"),
             ("Corredor Logístico Porto de Sines","Infraestrutura & Logística","Sines",
-             "Oportunidade de co-investimento no corredor logístico do Porto de Sines — porta atlântica da Europa. Alinhado com a expansão das infraestruturas portuárias e programas de concessão nacionais. Potencial de ligação a cadeias de abastecimento globais estratégicas para Abu Dhabi.",
+             "Oportunidade de co-investimento no corredor logístico do Porto de Sines — porta atlântica da Europa. Alinhado com a expansão das infraestruturas portuárias e programas de concessão nacionais.",
              15000000,0,80,"8-12% ao ano","15-20 anos","Phase 2.0 — Representação","Em análise"),
             ("Parque Solar Alentejo Sul — 50MW","Energias Renováveis","Beja",
-             "Terreno com licença prévia aprovada para parque solar fotovoltaico de 50 MW. Contrato de ligação à rede garantido. Estrutura PPA disponível para retorno estável a longo prazo. Enquadrado nos objetivos ESG de ADIA, Mubadala e ADQ.",
+             "Terreno com licença prévia aprovada para parque solar fotovoltaico de 50 MW. Contrato de ligação à rede garantido. Estrutura PPA disponível para retorno estável a longo prazo.",
              28000000,120,8,"8-10% ao ano","20-25 anos","Phase 2.0 — Representação","Disponível"),
             ("Regeneração Urbana — Lisboa Premium","Imobiliário & Regeneração Urbana","Lisboa",
-             "Conjunto de ativos em Lisboa para regeneração brown-to-green: student living, senior living e ativos mistos. Yields estáveis e valorização do capital no médio prazo. Motor de arranque da Phase 1.0 com retorno ao investidor principal em 12-18 meses.",
+             "Conjunto de ativos em Lisboa para regeneração brown-to-green: student living, senior living e ativos mistos. Yields estáveis e valorização do capital no médio prazo.",
              5000000,0,22,"10-15% ao ano","4-6 anos","Phase 1.0 — Real Estate","Disponível"),
         ]
         for s in seeds:
@@ -110,19 +123,19 @@ def get_all_opps(sector='', fase='', q=''):
         params += [f'%{q.lower()}%']*3
     sql += " ORDER BY id DESC"
     cur.execute(sql, params)
-    rows = cur.fetchall()
+    rows = fetchall_dict(cur)
     cur.close()
     conn.close()
-    return [dict(r) for r in rows]
+    return rows
 
 def get_opp(opp_id):
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("SELECT * FROM opportunities WHERE id=%s", (opp_id,))
-    row = cur.fetchone()
+    row = fetchone_dict(cur)
     cur.close()
     conn.close()
-    return dict(row) if row else None
+    return row
 
 def create_opp(data):
     conn = get_conn()
@@ -134,7 +147,7 @@ def create_opp(data):
          data['investimento'],data['area'],data['jobs'],data['retorno'],
          data['horizonte'],data['fase'],data['estado'],
          json.dumps(data['photos']),json.dumps(data['docs'])))
-    opp_id = cur.fetchone()['id']
+    opp_id = cur.fetchone()[0]
     conn.commit()
     cur.close()
     conn.close()
@@ -145,8 +158,7 @@ def update_opp(opp_id, data):
     cur = conn.cursor()
     cur.execute("""UPDATE opportunities SET
         titulo=%s,sector=%s,municipio=%s,descricao=%s,investimento=%s,area=%s,
-        jobs=%s,retorno=%s,horizonte=%s,fase=%s,estado=%s
-        WHERE id=%s""",
+        jobs=%s,retorno=%s,horizonte=%s,fase=%s,estado=%s WHERE id=%s""",
         (data['titulo'],data['sector'],data['municipio'],data['descricao'],
          data['investimento'],data['area'],data['jobs'],data['retorno'],
          data['horizonte'],data['fase'],data['estado'],opp_id))
@@ -185,7 +197,14 @@ def get_stats():
     row = cur.fetchone()
     cur.close()
     conn.close()
-    return dict(row)
+    return {'total': row[0], 'investimento': row[1], 'jobs': row[2], 'sectors': row[3]}
+
+def parse_opp(o):
+    if o and isinstance(o.get('photos'), str):
+        o['photos'] = json.loads(o['photos'])
+    if o and isinstance(o.get('docs'), str):
+        o['docs'] = json.loads(o['docs'])
+    return o
 
 # ---------- Auth ----------
 
@@ -217,21 +236,15 @@ def index():
     sector = request.args.get('sector','')
     fase = request.args.get('fase','')
     q = request.args.get('q','')
-    opps = get_all_opps(sector, fase, q)
-    # parse photos/docs se string
-    for o in opps:
-        if isinstance(o['photos'], str): o['photos'] = json.loads(o['photos'])
-        if isinstance(o['docs'], str): o['docs'] = json.loads(o['docs'])
+    opps = [parse_opp(o) for o in get_all_opps(sector, fase, q)]
     used_sectors = sorted(set(o['sector'].split(' ')[0] for o in get_all_opps()))
     return render_template('portal.html', opportunities=opps,
                            sectors=used_sectors, sector=sector, fase=fase, q=q)
 
 @app.route('/oportunidade/<int:opp_id>')
 def oportunidade(opp_id):
-    opp = get_opp(opp_id)
+    opp = parse_opp(get_opp(opp_id))
     if not opp: return redirect(url_for('index'))
-    if isinstance(opp['photos'], str): opp['photos'] = json.loads(opp['photos'])
-    if isinstance(opp['docs'], str): opp['docs'] = json.loads(opp['docs'])
     return render_template('detalhe.html', opp=opp)
 
 # ---------- Admin ----------
@@ -253,10 +266,7 @@ def admin_logout():
 @app.route('/admin')
 @login_required
 def admin_dashboard():
-    opps = get_all_opps()
-    for o in opps:
-        if isinstance(o['photos'], str): o['photos'] = json.loads(o['photos'])
-        if isinstance(o['docs'], str): o['docs'] = json.loads(o['docs'])
+    opps = [parse_opp(o) for o in get_all_opps()]
     stats = get_stats()
     return render_template('admin_dashboard.html', opportunities=opps, stats=stats)
 
@@ -289,10 +299,8 @@ def admin_nova():
 @app.route('/admin/editar/<int:opp_id>', methods=['GET','POST'])
 @login_required
 def admin_editar(opp_id):
-    opp = get_opp(opp_id)
+    opp = parse_opp(get_opp(opp_id))
     if not opp: return redirect(url_for('admin_dashboard'))
-    if isinstance(opp['photos'], str): opp['photos'] = json.loads(opp['photos'])
-    if isinstance(opp['docs'], str): opp['docs'] = json.loads(opp['docs'])
     if request.method == 'POST':
         photos = save_uploads('photos', opp['photos'])
         docs = save_uploads('docs', opp['docs'])
@@ -326,10 +334,9 @@ def admin_eliminar(opp_id):
 @app.route('/admin/remover-foto/<int:opp_id>/<filename>', methods=['POST'])
 @login_required
 def remover_foto(opp_id, filename):
-    opp = get_opp(opp_id)
+    opp = parse_opp(get_opp(opp_id))
     if opp:
-        photos = json.loads(opp['photos']) if isinstance(opp['photos'], str) else opp['photos']
-        photos = [p for p in photos if p['filename'] != filename]
+        photos = [p for p in opp['photos'] if p['filename'] != filename]
         update_opp_photos(opp_id, photos)
         try: os.remove(os.path.join(UPLOAD_FOLDER, filename))
         except: pass
