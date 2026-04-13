@@ -10,31 +10,60 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink)}
 {% if rtl %}body{direction:rtl;font-family:'Segoe UI',Tahoma,Arial,sans-serif}{% endif %}
 a{text-decoration:none;color:inherit}
+
 .topbar{background:var(--navy);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(201,168,76,0.15)}
-.topbar-main{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:52px}
-.topbar-brand{display:flex;align-items:center;text-decoration:none}
-.topbar-links{display:flex;align-items:center;gap:6px}
-.nav-link{padding:6px 12px;border-radius:5px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.65);transition:all 0.15s}
-.nav-link:hover{background:rgba(255,255,255,0.08);color:#fff}
-.nav-link.admin{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
-.nav-link.admin:hover{background:rgba(201,168,76,0.25)}
-/* Bandeiras — redondas, PT primeiro, UAE segundo, mais pequenas */
-.lang-bar{background:rgba(0,0,0,0.25);border-top:1px solid rgba(255,255,255,0.05);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;padding:0 1rem}
+
+/* Linha 1: Logo (fundo branco) + à direita nada */
+.topbar-row1{
+  display:flex;align-items:stretch;height:52px;
+}
+.topbar-logo-wrap{
+  background:#fff;
+  padding:6px 20px;
+  display:flex;align-items:center;
+  border-right:1px solid rgba(201,168,76,0.2);
+  flex-shrink:0;
+}
+.topbar-logo-wrap img{height:38px;width:auto;display:block}
+.topbar-row1-right{flex:1}
+
+/* Linha 2: Bandeiras (esquerda) + Portal/Admin (direita, mesmo nível) */
+.topbar-row2{
+  background:rgba(0,0,0,0.25);
+  border-top:1px solid rgba(255,255,255,0.05);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1rem;
+  min-height:36px;
+}
+.lang-bar{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  white-space:nowrap;display:flex;align-items:center;
+}
 .lang-bar::-webkit-scrollbar{display:none}
-.lang-bar-inner{display:inline-flex;gap:5px;padding:5px 0;align-items:center}
+.lang-bar-inner{display:inline-flex;gap:4px;padding:4px 0;align-items:center}
 .lp{
   display:inline-flex;align-items:center;justify-content:center;
-  width:28px;height:28px;border-radius:50%;
+  width:26px;height:26px;border-radius:50%;
   cursor:pointer;text-decoration:none;
   transition:all 0.15s;
   border:2px solid transparent;
-  opacity:0.55;
-  overflow:hidden;
-  flex-shrink:0;
+  opacity:0.55;overflow:hidden;flex-shrink:0;
 }
-.lp:hover{opacity:1;transform:scale(1.12)}
-.lp.active{opacity:1;border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,168,76,0.35)}
+.lp:hover{opacity:1;transform:scale(1.1)}
+.lp.active{opacity:1;border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,168,76,0.3)}
 .lp img{width:100%;height:100%;object-fit:cover;display:block}
+.topbar-nav{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.nav-link{
+  padding:5px 12px;border-radius:4px;font-size:12px;font-weight:500;
+  color:rgba(255,255,255,0.65);transition:all 0.15s;
+}
+.nav-link:hover{background:rgba(255,255,255,0.08);color:#fff}
+.nav-link.admin{
+  background:rgba(201,168,76,0.15);color:var(--gold);
+  border:1px solid rgba(201,168,76,0.3);
+}
+.nav-link.admin:hover{background:rgba(201,168,76,0.25)}
+
 .flash{padding:10px 1.5rem;font-size:13px;text-align:center}
 .flash.success{background:#e6f4ea;color:#1a5c2a;border-bottom:1px solid #b8dfc0}
 .flash.error{background:#fde8e8;color:#a0281e;border-bottom:1px solid #f5c6c6}
@@ -43,31 +72,34 @@ a{text-decoration:none;color:inherit}
 </head>
 <body>
 <nav class="topbar">
-  <div class="topbar-main">
-    <a href="/" class="topbar-brand">
-      <img src="/static/adpi-logo-nav.png" alt="ADPI" style="height:40px;width:auto"/>
+  <div class="topbar-row1">
+    <a href="/" class="topbar-logo-wrap">
+      <img src="/static/adpi-logo-nav.png" alt="ADPI"/>
     </a>
-    <div class="topbar-links">
+    <div class="topbar-row1-right"></div>
+  </div>
+  <div class="topbar-row2">
+    <div class="lang-bar">
+      <div class="lang-bar-inner">
+        {% set flag_urls = {
+          'pt': 'https://flagcdn.com/w40/pt.png',
+          'ar': 'https://flagcdn.com/w40/ae.png',
+          'en': 'https://flagcdn.com/w40/gb.png',
+          'es': 'https://flagcdn.com/w40/es.png',
+          'fr': 'https://flagcdn.com/w40/fr.png',
+          'de': 'https://flagcdn.com/w40/de.png',
+          'it': 'https://flagcdn.com/w40/it.png'
+        } %}
+        {% for code, info in languages.items() %}
+        <a href="/lang/{{ code }}" class="lp {% if code == lang %}active{% endif %}" title="{{ info['full'] }}">
+          <img src="{{ flag_urls[code] }}" alt="{{ info['full'] }}"/>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="topbar-nav">
       <a href="/" class="nav-link">{{ ui.investor_portal }}</a>
       <a href="/admin" class="nav-link admin">{{ ui.admin_access }}</a>
-    </div>
-  </div>
-  <div class="lang-bar">
-    <div class="lang-bar-inner">
-      {% set flag_urls = {
-        'pt': 'https://flagcdn.com/w40/pt.png',
-        'en': 'https://flagcdn.com/w40/gb.png',
-        'ar': 'https://flagcdn.com/w40/ae.png',
-        'es': 'https://flagcdn.com/w40/es.png',
-        'fr': 'https://flagcdn.com/w40/fr.png',
-        'de': 'https://flagcdn.com/w40/de.png',
-        'it': 'https://flagcdn.com/w40/it.png'
-      } %}
-      {% for code, info in languages.items() %}
-      <a href="/lang/{{ code }}" class="lp {% if code == lang %}active{% endif %}" title="{{ info['full'] }}">
-        <img src="{{ flag_urls[code] }}" alt="{{ info['full'] }}"/>
-      </a>
-      {% endfor %}
     </div>
   </div>
 </nav>

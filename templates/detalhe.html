@@ -120,7 +120,7 @@ const ui = {{ ui|tojson }};
 const opp = {
   titulo:      {{ opp.titulo|tojson }},
   descricao:   {{ opp.descricao|tojson }},
-  sector:      {{ opp.get('sector_pt', opp.sector)|tojson }},
+  sector:      {{ opp.sector|tojson }},
   municipio:   {{ opp.municipio|tojson }},
   investimento: {{ opp.investimento }},
   area:        {{ opp.area or 0 }},
