@@ -13,15 +13,34 @@
 .fl{font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--hint);margin-bottom:5px}
 .fi{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;color:var(--ink);outline:none;transition:border-color 0.15s;font-family:inherit}
 .fi:focus{border-color:var(--navy)}
-textarea.fi{resize:vertical;min-height:100px}
+textarea.fi{resize:vertical;min-height:110px}
 select.fi{cursor:pointer}
+.lang-notice{
+  background:var(--gold-pale);border:1px solid var(--gold-border);
+  border-radius:8px;padding:12px 16px;margin-bottom:1rem;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.lang-notice-icon{font-size:20px;flex-shrink:0}
+.lang-notice-text{font-size:12px;color:#7a5c00;line-height:1.5}
+.lang-notice-text strong{display:block;margin-bottom:2px;font-size:13px}
+.lang-select-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.lang-opt{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:20px;
+  font-size:12px;font-weight:600;
+  border:1px solid var(--border);background:#fff;color:var(--muted);
+  cursor:pointer;transition:all 0.15s;
+}
+.lang-opt:hover{border-color:var(--navy);color:var(--navy)}
+.lang-opt.selected{background:var(--navy);color:#fff;border-color:var(--navy)}
+.lang-opt-flag{font-size:16px}
 .uz{border:1.5px dashed var(--border);border-radius:8px;padding:1.25rem;text-align:center;cursor:pointer;background:var(--bg);transition:all 0.15s;position:relative}
 .uz:hover{border-color:var(--navy);background:#eef2f9}
 .uz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .uz-i{font-size:24px;margin-bottom:6px}
 .uz-t{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:2px}
 .uz-s{font-size:11px;color:var(--hint)}
-.btn-p{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:7px;background:var(--navy);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:background 0.15s;font-family:inherit}
+.btn-p{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:7px;background:var(--navy);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:background 0.15s;font-family:inherit}
 .btn-p:hover{background:var(--navy-ll)}
 .btn-c{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:7px;background:#fff;color:var(--ink);border:1px solid var(--border);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:all 0.15s}
 .btn-c:hover{background:var(--bg)}
@@ -43,12 +62,34 @@ select.fi{cursor:pointer}
   </div>
 
   <form method="post" enctype="multipart/form-data">
+
+    <!-- IDIOMA DO CONTEÚDO -->
+    <div class="fc">
+      <div class="lang-notice">
+        <div class="lang-notice-icon">&#127760;</div>
+        <div class="lang-notice-text">
+          <strong>{{ ui.lang_content }}</strong>
+          {{ ui.lang_content_sub }}
+          <div class="lang-select-row" id="lang-sel-row">
+            {% for code, info in languages.items() %}
+            <div class="lang-opt {% if (opp and opp.get('content_lang','pt')==code) or (not opp and code=='pt') %}selected{% endif %}"
+                 onclick="selectContentLang('{{ code }}', this)">
+              <span class="lang-opt-flag">{{ info['flag'] }}</span>{{ info['full'] }}
+            </div>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="content_lang" id="content_lang_input" value="{{ opp.get('content_lang','pt') if opp else 'pt' }}"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- INFORMAÇÃO PRINCIPAL -->
     <div class="fc">
       <div class="fst">{{ ui.main_info }}</div>
       <div class="fg">
         <div>
           <div class="fl">{{ ui.title_label }}</div>
-          <input class="fi" name="titulo" placeholder="Ex: Parque Solar Alentejo Norte" value="{{ opp.titulo if opp else '' }}" required/>
+          <input class="fi" name="titulo" placeholder="{{ ui.title_ph }}" value="{{ opp.titulo if opp else '' }}" required/>
         </div>
         <div>
           <div class="fl">{{ ui.sector_label }}</div>
@@ -73,6 +114,7 @@ select.fi{cursor:pointer}
         <div>
           <div class="fl">{{ ui.fase_label }}</div>
           <select class="fi" name="fase">
+            <option value="">{{ ui.select_fase }}</option>
             {% for f in ['Phase 1.0 — Real Estate','Phase 2.0 — Representação','Phase 3.0 — Digital'] %}
             <option value="{{ f }}" {% if opp and opp.get('fase','')==f %}selected{% endif %}>{{ f }}</option>
             {% endfor %}
@@ -83,20 +125,21 @@ select.fi{cursor:pointer}
         <div>
           <div class="fl">{{ ui.estado_label }}</div>
           <select class="fi" name="estado">
-            {% for e in ['Disponível','Em análise','Reservado'] %}
-            <option value="{{ e }}" {% if opp and opp.estado==e %}selected{% endif %}>{{ e }}</option>
-            {% endfor %}
+            <option value="Disponível" {% if not opp or opp.estado=='Disponível' %}selected{% endif %}>{{ ui.estado_disponivel }}</option>
+            <option value="Em análise" {% if opp and opp.estado=='Em análise' %}selected{% endif %}>{{ ui.estado_analise }}</option>
+            <option value="Reservado" {% if opp and opp.estado=='Reservado' %}selected{% endif %}>{{ ui.estado_reservado }}</option>
           </select>
         </div>
       </div>
       <div class="fg f">
         <div>
           <div class="fl">{{ ui.desc_label }}</div>
-          <textarea class="fi" name="descricao" placeholder="Descreva a oportunidade..." required>{{ opp.descricao if opp else '' }}</textarea>
+          <textarea class="fi" name="descricao" placeholder="{{ ui.desc_ph }}" required>{{ opp.descricao if opp else '' }}</textarea>
         </div>
       </div>
     </div>
 
+    <!-- DADOS FINANCEIROS -->
     <div class="fc">
       <div class="fst">{{ ui.financial_data }}</div>
       <div class="fg t">
@@ -116,15 +159,16 @@ select.fi{cursor:pointer}
       <div class="fg">
         <div>
           <div class="fl">{{ ui.return_label }}</div>
-          <input class="fi" name="retorno" placeholder="Ex: 10-15% ao ano" value="{{ opp.retorno if opp else '' }}"/>
+          <input class="fi" name="retorno" placeholder="{{ ui.return_ph }}" value="{{ opp.retorno if opp else '' }}"/>
         </div>
         <div>
           <div class="fl">{{ ui.horizon_label }}</div>
-          <input class="fi" name="horizonte" placeholder="Ex: 5-7 anos" value="{{ opp.horizonte if opp else '' }}"/>
+          <input class="fi" name="horizonte" placeholder="{{ ui.horizon_ph }}" value="{{ opp.horizonte if opp else '' }}"/>
         </div>
       </div>
     </div>
 
+    <!-- IMAGENS E DOCUMENTOS -->
     <div class="fc">
       <div class="fst">{{ ui.media_title }}</div>
       <div class="fg">
@@ -172,4 +216,13 @@ select.fi{cursor:pointer}
     </div>
   </form>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+function selectContentLang(code, el) {
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('content_lang_input').value = code;
+}
+</script>
 {% endblock %}

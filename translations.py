@@ -3,17 +3,17 @@ import os, json, hashlib, urllib.request, urllib.parse
 GOOGLE_API_KEY = os.environ.get('GOOGLE_TRANSLATE_KEY', '')
 CACHE = {}
 
+# Ordem: PT, EN, AR, depois resto
 LANGUAGES = {
-    'pt': {'name': 'PT', 'flag': '🇵🇹', 'rtl': False, 'full': 'Português'},
-    'en': {'name': 'EN', 'flag': '🇬🇧', 'rtl': False, 'full': 'English'},
-    'es': {'name': 'ES', 'flag': '🇪🇸', 'rtl': False, 'full': 'Español'},
-    'fr': {'name': 'FR', 'flag': '🇫🇷', 'rtl': False, 'full': 'Français'},
-    'de': {'name': 'DE', 'flag': '🇩🇪', 'rtl': False, 'full': 'Deutsch'},
-    'it': {'name': 'IT', 'flag': '🇮🇹', 'rtl': False, 'full': 'Italiano'},
-    'ar': {'name': 'AR', 'flag': '🇦🇪', 'rtl': True,  'full': 'العربية'},
+    'pt': {'flag': '🇵🇹', 'rtl': False, 'full': 'Português', 'google': 'pt'},
+    'en': {'flag': '🇬🇧', 'rtl': False, 'full': 'English',   'google': 'en'},
+    'ar': {'flag': '🇦🇪', 'rtl': True,  'full': 'العربية',   'google': 'ar'},
+    'es': {'flag': '🇪🇸', 'rtl': False, 'full': 'Español',   'google': 'es'},
+    'fr': {'flag': '🇫🇷', 'rtl': False, 'full': 'Français',  'google': 'fr'},
+    'de': {'flag': '🇩🇪', 'rtl': False, 'full': 'Deutsch',   'google': 'de'},
+    'it': {'flag': '🇮🇹', 'rtl': False, 'full': 'Italiano',  'google': 'it'},
 }
 
-# Tudo em PT — Google traduz para os outros idiomas
 UI_PT = {
     'investor_portal': 'Portal',
     'admin_access': 'Admin',
@@ -53,6 +53,12 @@ UI_PT = {
     'clear_filters': 'Limpar filtros',
     'contact_more': 'Para mais informações',
     'contact_sub': 'Contacte a equipa ADPI para obter informação detalhada.',
+    'pdf_confidential': 'Confidencial',
+    'pdf_generated': 'Documento gerado em',
+    'pdf_page': 'Pág',
+    'fase_label_pdf': 'Fase',
+    'sector_label_pdf': 'Sector',
+    # Admin
     'password_label': 'Password de administrador',
     'login_btn': 'Entrar',
     'login_title': 'Acesso Restrito',
@@ -74,47 +80,51 @@ UI_PT = {
     'delete_confirm': 'Eliminar esta oportunidade?',
     'form_title_new': 'Nova Oportunidade',
     'form_title_edit': 'Editar Oportunidade',
-    'form_sub_new': 'Preencha os dados para publicar no portal',
-    'form_sub_edit': 'Atualizar dados publicados no portal',
+    'form_sub_new': 'Preencha os dados para publicar no portal do investidor',
+    'form_sub_edit': 'Atualizar dados publicados no portal do investidor',
     'cancel': 'Cancelar',
     'save': 'Guardar alterações',
     'publish': 'Publicar oportunidade',
     'main_info': 'Informação principal',
     'title_label': 'Título / Designação',
+    'title_ph': 'Ex: Solar Park North Alentejo',
     'sector_label': 'Sector',
-    'municipio_label': 'Município',
+    'municipio_label': 'Município / Cidade',
     'fase_label': 'Fase ADPI',
     'estado_label': 'Estado',
     'desc_label': 'Descrição',
+    'desc_ph': 'Descreva a oportunidade de investimento...',
+    'lang_content': 'Idioma do conteúdo inserido',
+    'lang_content_sub': 'O conteúdo pode ser inserido em qualquer idioma. O sistema traduzirá automaticamente para os outros.',
     'financial_data': 'Dados financeiros e dimensão',
     'invest_label': 'Investimento mínimo (€)',
     'area_label': 'Área (hectares)',
     'jobs_label': 'Postos de trabalho diretos',
     'return_label': 'Retorno esperado',
+    'return_ph': 'Ex: 10-15% ao ano',
     'horizon_label': 'Horizonte temporal',
+    'horizon_ph': 'Ex: 5-7 anos',
     'media_title': 'Imagens e documentos',
     'photos_label': 'Fotografias do projeto',
-    'docs_label': 'Documentos',
+    'docs_label': 'Documentos (brochuras, estudos)',
     'add_photos': 'Adicionar fotos',
     'add_docs': 'Adicionar documentos',
     'select_sector': 'Selecionar sector...',
     'select_mun': 'Selecionar...',
-    # PDF labels
-    'pdf_confidential': 'Confidencial',
-    'pdf_generated': 'Documento gerado em',
-    'pdf_page': 'Pág',
-    'pdf_of': 'de',
-    'fase_label_pdf': 'Fase',
-    'sector_label_pdf': 'Sector',
+    'select_fase': 'Selecionar fase...',
+    'opp_label': 'Oportunidade',
+    'phase_label': 'Fase',
+    'actions_label': 'Ações',
 }
 
-def _google(text, lang):
-    if not text or not GOOGLE_API_KEY: return text
-    ck = hashlib.md5(f'{lang}:{text}'.encode()).hexdigest()
+def _google(text, target_lang, source_lang='pt'):
+    if not text or not GOOGLE_API_KEY or target_lang == source_lang:
+        return text
+    ck = hashlib.md5(f'{source_lang}>{target_lang}:{text}'.encode()).hexdigest()
     if ck in CACHE: return CACHE[ck]
     try:
         data = urllib.parse.urlencode({
-            'q': text, 'source': 'pt', 'target': lang,
+            'q': text, 'source': source_lang, 'target': target_lang,
             'key': GOOGLE_API_KEY, 'format': 'text'
         }).encode()
         req = urllib.request.Request(
@@ -134,22 +144,23 @@ def translate_ui(lang):
     if lang == 'pt': return UI_PT
     ck = f'ui_{lang}'
     if ck in CACHE: return CACHE[ck]
-    result = {k: _google(v, lang) for k, v in UI_PT.items()}
+    result = {k: _google(v, lang, 'pt') for k, v in UI_PT.items()}
     CACHE[ck] = result
     return result
 
-def translate_opp(opp, lang):
-    """Traduz titulo, descricao, sector e estado. Guarda PT originals para PDF."""
-    if lang == 'pt': return opp
+def translate_opp(opp, target_lang):
+    """Traduz oportunidade do idioma original para target_lang."""
+    if not opp: return opp
+    source_lang = opp.get('content_lang', 'pt')
     o = dict(opp)
-    # guardar originais PT
-    o['titulo_pt']    = opp.get('titulo', '')
-    o['descricao_pt'] = opp.get('descricao', '')
-    o['sector_pt']    = opp.get('sector', '')
-    o['estado_pt']    = opp.get('estado', '')
-    # traduzir
-    o['titulo']    = _google(opp.get('titulo', ''), lang)
-    o['descricao'] = _google(opp.get('descricao', ''), lang)
-    o['sector']    = _google(opp.get('sector', ''), lang)
-    o['estado']    = _google(opp.get('estado', ''), lang)
+    # Guardar originais
+    o['titulo_orig']    = opp.get('titulo', '')
+    o['descricao_orig'] = opp.get('descricao', '')
+    o['sector_pt']      = opp.get('sector', '')
+    o['estado_pt']      = opp.get('estado', 'Disponível')
+    if target_lang != source_lang:
+        o['titulo']    = _google(opp.get('titulo',''), target_lang, source_lang)
+        o['descricao'] = _google(opp.get('descricao',''), target_lang, source_lang)
+        o['sector']    = _google(opp.get('sector',''), target_lang, source_lang)
+        o['estado']    = _google(opp.get('estado',''), target_lang, source_lang)
     return o

@@ -82,9 +82,11 @@ def init_db():
             estado TEXT DEFAULT 'Disponível',
             photos TEXT DEFAULT '[]',
             docs TEXT DEFAULT '[]',
+            content_lang TEXT DEFAULT 'pt',
             created_at TIMESTAMP DEFAULT NOW()
         )
     """)
+    cur.execute("""ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS content_lang TEXT DEFAULT 'pt'""")
     cur.execute("SELECT COUNT(*) FROM opportunities")
     count = cur.fetchone()[0]
     if count == 0:
@@ -149,12 +151,12 @@ def create_opp(data):
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("""INSERT INTO opportunities
-        (titulo,sector,municipio,descricao,investimento,area,jobs,retorno,horizonte,fase,estado,photos,docs)
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+        (titulo,sector,municipio,descricao,investimento,area,jobs,retorno,horizonte,fase,estado,photos,docs,content_lang)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
         (data['titulo'],data['sector'],data['municipio'],data['descricao'],
          data['investimento'],data['area'],data['jobs'],data['retorno'],
          data['horizonte'],data['fase'],data['estado'],
-         json.dumps(data['photos']),json.dumps(data['docs'])))
+         json.dumps(data['photos']),json.dumps(data['docs']),data.get('content_lang','pt')))
     opp_id = cur.fetchone()[0]
     conn.commit()
     cur.close()
@@ -166,10 +168,10 @@ def update_opp(opp_id, data):
     cur = conn.cursor()
     cur.execute("""UPDATE opportunities SET
         titulo=%s,sector=%s,municipio=%s,descricao=%s,investimento=%s,area=%s,
-        jobs=%s,retorno=%s,horizonte=%s,fase=%s,estado=%s WHERE id=%s""",
+        jobs=%s,retorno=%s,horizonte=%s,fase=%s,estado=%s,content_lang=%s WHERE id=%s""",
         (data['titulo'],data['sector'],data['municipio'],data['descricao'],
          data['investimento'],data['area'],data['jobs'],data['retorno'],
-         data['horizonte'],data['fase'],data['estado'],opp_id))
+         data['horizonte'],data['fase'],data['estado'],data.get('content_lang','pt'),opp_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -311,6 +313,7 @@ def admin_nova():
             'horizonte': request.form.get('horizonte',''),
             'fase': request.form.get('fase','Phase 1.0 — Real Estate'),
             'estado': request.form.get('estado','Disponível'),
+            'content_lang': request.form.get('content_lang','pt'),
             'photos': photos,
             'docs': docs,
         }
@@ -341,6 +344,7 @@ def admin_editar(opp_id):
             'horizonte': request.form.get('horizonte',''),
             'fase': request.form.get('fase','Phase 1.0 — Real Estate'),
             'estado': request.form.get('estado','Disponível'),
+            'content_lang': request.form.get('content_lang','pt'),
         }
         update_opp(opp_id, data)
         update_opp_media(opp_id, photos, docs)
