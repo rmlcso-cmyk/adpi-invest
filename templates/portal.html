@@ -88,7 +88,7 @@
     {% for opp in opportunities %}
     {% set fc = 'f10' if '1.0' in opp.get('fase','') else 'f20' %}
     {% set raw_estado = opp.estado|lower %}
-    {% set ec = 'e-dsp' if 'dispo' in raw_estado or 'avail' in raw_estado or 'verfüg' in raw_estado or 'dispo' in raw_estado else ('e-anl' if 'anal' in raw_estado or 'analy' in raw_estado or 'analys' in raw_estado else 'e-rsv') %}
+    {% set ec = 'e-dsp' if 'dispo' in raw_estado or 'avail' in raw_estado or 'verfüg' in raw_estado or 'disp' in raw_estado else ('e-anl' if 'anal' in raw_estado or 'analy' in raw_estado or 'analys' in raw_estado else 'e-rsv') %}
     {% set icons = {'Imobiliário':'🏙','Infraestrutura':'🏗','Energia':'⚡','Private':'💼','Blue':'🌊','Agricultura':'🌾','Digital':'📡','Créditos':'🌳'} %}
     {% set icon = namespace(val='🌿') %}
     {% for k,v in icons.items() %}{% if k in opp.sector %}{% set icon.val = v %}{% endif %}{% endfor %}

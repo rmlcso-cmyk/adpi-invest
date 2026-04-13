@@ -7,7 +7,7 @@ from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, send_from_directory)
 from werkzeug.utils import secure_filename
 import pg8000
-from translations import LANGUAGES, translate_ui, translate_opp
+from translations import LANGUAGES, translate_ui, translate_opp, translate_opp_with_original
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'adpi-secret-2026')
@@ -261,7 +261,7 @@ def index():
 @app.route('/oportunidade/<int:opp_id>')
 def oportunidade(opp_id):
     lang = get_lang()
-    opp = translate_opp(parse_opp(get_opp(opp_id)), lang)
+    opp = translate_opp_with_original(parse_opp(get_opp(opp_id)), lang)
     if not opp: return redirect(url_for('index'))
     ui = translate_ui(lang)
     return render_template('detalhe.html', opp=opp, ui=ui, lang=lang,

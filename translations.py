@@ -136,3 +136,13 @@ def translate_opp(opp, lang):
     o['titulo']    = _google(opp.get('titulo', ''), lang)
     o['descricao'] = _google(opp.get('descricao', ''), lang)
     return o
+
+def translate_opp_with_original(opp, lang):
+    """Traduz oportunidade mas guarda descricao original em PT para o PDF."""
+    if lang == 'pt':
+        return opp
+    o = dict(opp)
+    o['descricao_pt'] = opp.get('descricao', '')  # guardar original PT para PDF
+    o['titulo']    = _google(opp.get('titulo', ''), lang)
+    o['descricao'] = _google(opp.get('descricao', ''), lang)
+    return o

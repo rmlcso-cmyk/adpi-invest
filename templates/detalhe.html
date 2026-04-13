@@ -25,7 +25,7 @@
 .kpi-v.big{font-size:17px;color:var(--navy)}
 .docs-list{display:flex;flex-direction:column;gap:6px}
 .doc-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:7px;font-size:12px;color:var(--muted)}
-.sidebar{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.25rem;position:sticky;top:70px}
+.sidebar{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.25rem;position:sticky;top:100px}
 .est-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:1rem}
 .e-dsp{background:#e6f4ea;color:#1a5c2a}
 .e-anl{background:#fef3dc;color:#7a4e00}
@@ -49,7 +49,7 @@
     <h1>{{ opp.titulo }}</h1>
     {% set fc = 'f10' if '1.0' in opp.get('fase','') else 'f20' %}
     <span class="fase-tag {{ fc }}">{{ opp.get('fase','') }}</span>
-    <span class="sector-tag">{{ opp.sector }} · 📍 {{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} {{ ui.hectares }}{% endif %}</span>
+    <span class="sector-tag">{{ opp.sector }} | {{ opp.municipio }}{% if opp.area %} | {{ opp.area|int }} {{ ui.hectares }}{% endif %}</span>
   </div>
 </div>
 
@@ -58,7 +58,7 @@
     <a href="/" class="back-link">{{ ui.back }}</a>
     {% if opp.photos %}
     <div class="gallery">{% for p in opp.photos %}<img src="/uploads/{{ p.filename }}" alt="{{ opp.titulo }}"/>{% endfor %}</div>
-    {% else %}<div class="no-gallery">🌿</div>{% endif %}
+    {% else %}<div class="no-gallery">&#127807;</div>{% endif %}
 
     <div class="sec-card">
       <div class="sec-title">{{ ui.description }}</div>
@@ -82,7 +82,7 @@
       <div class="sec-title">{{ ui.documents }}</div>
       <div class="docs-list">
         {% for d in opp.docs %}
-        <div class="doc-item">📄 {{ d.original }}<a href="/uploads/{{ d.filename }}" download style="margin-left:auto;font-size:11px;color:var(--blue)">⬇ {{ ui.download }}</a></div>
+        <div class="doc-item">[ PDF ] {{ d.original }}<a href="/uploads/{{ d.filename }}" download style="margin-left:auto;font-size:11px;color:var(--blue)">{{ ui.download }}</a></div>
         {% endfor %}
       </div>
     </div>
@@ -91,11 +91,12 @@
 
   <div>
     <div class="sidebar">
-      {% set ec = 'e-dsp' if opp.estado in ['Disponível','Available','Disponible','Verfügbar','Disponibile'] else ('e-anl' if 'anal' in opp.estado.lower() or 'analy' in opp.estado.lower() else 'e-rsv') %}
+      {% set raw = opp.estado|lower %}
+      {% set ec = 'e-dsp' if 'dispo' in raw or 'avail' in raw or 'verfüg' in raw or 'disp' in raw else ('e-anl' if 'anal' in raw or 'analy' in raw else 'e-rsv') %}
       <span class="est-badge {{ ec }}">{{ opp.estado }}</span>
       <div class="invest-v">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div>
       <div class="invest-sub">{{ ui.min_investment }}</div>
-      <button class="btn-pdf" onclick="gerarPDF()">⬇ {{ ui.download_pdf }}</button>
+      <button class="btn-pdf" onclick="gerarPDF()">&#11015; {{ ui.download_pdf }}</button>
       <button class="btn-contact" onclick="document.getElementById('ct').scrollIntoView({behavior:'smooth'})">{{ ui.contact_team }}</button>
       <div class="contact-info" id="ct">
         <strong>ADPI — Abu Dhabi Portugal Investment</strong>
@@ -105,62 +106,160 @@
   </div>
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const {jsPDF}=window.jspdf;
 const opp={{ opp|tojson }};
+const ui={{ ui|tojson }};
+
 function gerarPDF(){
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210,H=297,m=20;
-  const navy=[10,22,40],gold=[201,168,76],white=[255,255,255],gray=[100,100,100],ink=[26,26,26],lb=[235,240,250];
-  const rgb=a=>doc.setFillColor(...a),txt=a=>doc.setTextColor(...a),drw=a=>doc.setDrawColor(...a);
-  rgb(navy);doc.rect(0,0,W,H,'F');
-  rgb([19,32,64]);doc.rect(0,0,W,75,'F');
-  rgb(gold);doc.rect(0,93,W,1.5,'F');
-  txt(gold);doc.setFontSize(36);doc.setFont('helvetica','bold');doc.text('ADPI',m,52);
-  doc.setTextColor(180,180,180);doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text('ABU DHABI · PORTUGAL INVESTMENT PLATFORM',m,60);
+  const navy=[10,22,40],gold=[201,168,76],white=[255,255,255],gray=[100,100,100],ink=[26,26,26],lb=[235,240,250],navyl=[19,32,64];
+  const rgb=a=>doc.setFillColor(...a);
+  const txt=a=>doc.setTextColor(...a);
+  const drw=a=>doc.setDrawColor(...a);
+
+  // --- CAPA ---
+  rgb(navy); doc.rect(0,0,W,H,'F');
+  rgb(navyl); doc.rect(0,0,W,75,'F');
+  rgb(gold); doc.rect(0,93,W,1.5,'F');
+
+  txt(gold); doc.setFontSize(36); doc.setFont('helvetica','bold');
+  doc.text('ADPI',m,52);
+  doc.setTextColor(180,180,180); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text('ABU DHABI - PORTUGAL INVESTMENT PLATFORM',m,60);
+
   const isp1=opp.fase&&opp.fase.includes('1.0');
-  rgb(isp1?gold:[26,95,168]);doc.roundedRect(m,68,52,7,2,2,'F');
-  txt(isp1?navy:white);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+  rgb(isp1?gold:[26,95,168]);
+  doc.roundedRect(m,68,60,7,2,2,'F');
+  txt(isp1?navy:white); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
   doc.text(opp.fase||'Phase 1.0',m+4,73);
-  doc.setTextColor(150,170,200);doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(opp.sector.toUpperCase(),m,84);
-  txt(white);doc.setFontSize(20);doc.setFont('helvetica','bold');
-  const tl=doc.splitTextToSize(opp.titulo,W-2*m);
+
+  doc.setTextColor(150,170,200); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text((opp.sector||'').toUpperCase(),m,84);
+
+  txt(white); doc.setFontSize(20); doc.setFont('helvetica','bold');
+  const tl=doc.splitTextToSize(opp.titulo||'',W-2*m);
   doc.text(tl,m,112);
-  doc.setTextColor(160,180,160);doc.setFontSize(11);doc.setFont('helvetica','normal');
-  doc.text('📍 '+opp.municipio+(opp.area?' · '+Math.round(opp.area)+' ha':''),m,119+tl.length*9);
+
+  doc.setTextColor(160,180,160); doc.setFontSize(11); doc.setFont('helvetica','normal');
+  const locText=opp.municipio+(opp.area?' | '+Math.round(opp.area)+' ha':'');
+  doc.text(locText,m,119+tl.length*9);
+
+  // Investment box
   const bY=155;
-  rgb([19,32,64]);doc.rect(m,bY,W-2*m,28,'F');
-  doc.setTextColor(150,170,200);doc.setFontSize(8);doc.text('INVESTIMENTO MÍNIMO',m+6,bY+9);
-  txt(gold);doc.setFontSize(22);doc.setFont('helvetica','bold');
-  doc.text('€ '+opp.investimento.toLocaleString('pt-PT'),m+6,bY+22);
-  const kpis=[{l:'Área',v:opp.area?Math.round(opp.area)+' ha':'—'},{l:'Emprego',v:opp.jobs?opp.jobs+' dir.':'—'},{l:'Retorno',v:opp.retorno||'—'},{l:'Horizonte',v:opp.horizonte||'—'}];
+  rgb(navyl); doc.rect(m,bY,W-2*m,28,'F');
+  doc.setTextColor(150,170,200); doc.setFontSize(8);
+  doc.text((ui.min_investment||'INVESTIMENTO MINIMO').toUpperCase(),m+6,bY+9);
+  txt(gold); doc.setFontSize(22); doc.setFont('helvetica','bold');
+  doc.text('EUR '+opp.investimento.toLocaleString('pt-PT'),m+6,bY+22);
+
+  // KPIs
+  const kpis=[
+    {l:ui.area||'Area', v:opp.area?Math.round(opp.area)+' ha':'--'},
+    {l:ui.jobs||'Emprego', v:opp.jobs?opp.jobs+' dir.':'--'},
+    {l:ui.expected_return||'Retorno', v:opp.retorno||'--'},
+    {l:ui.horizon||'Horizonte', v:opp.horizonte||'--'}
+  ];
   const kW=(W-2*m-9)/4;
-  kpis.forEach((k,i)=>{const kx=m+i*(kW+3);rgb([19,32,64]);doc.rect(kx,200,kW,18,'F');doc.setTextColor(130,155,180);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(k.l,kx+4,207);txt(white);doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.text(k.v.toString().substring(0,14),kx+4,214);});
-  doc.setTextColor(80,100,130);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('Documento gerado em '+new Date().toLocaleDateString('pt-PT')+' · Confidencial',m,H-10);
+  kpis.forEach((k,i)=>{
+    const kx=m+i*(kW+3);
+    rgb(navyl); doc.rect(kx,200,kW,18,'F');
+    doc.setTextColor(130,155,180); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(k.l.substring(0,18),kx+4,207);
+    txt(white); doc.setFontSize(8.5); doc.setFont('helvetica','bold');
+    doc.text(k.v.toString().substring(0,14),kx+4,214);
+  });
+
+  doc.setTextColor(80,100,130); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  doc.text('Documento gerado em '+new Date().toLocaleDateString('pt-PT')+' - Confidencial',m,H-10);
+
+  // --- PAG 2 ---
   doc.addPage();
-  rgb(navy);doc.rect(0,0,W,18,'F');txt(gold);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('ADPI',m,12);
-  doc.setTextColor(180,180,180);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(opp.titulo+' — Ficha Técnica',m+18,12);
+  rgb(navy); doc.rect(0,0,W,18,'F');
+  txt(gold); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text('ADPI',m,12);
+  doc.setTextColor(180,180,180); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text((opp.titulo||'').substring(0,50)+' - Ficha Tecnica',m+18,12);
+
   let y=30;
-  rgb(navy);doc.rect(m,y,W-2*m,8,'F');txt(white);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('DESCRIÇÃO',m+4,y+5.5);y+=14;
-  txt(ink);doc.setFontSize(9);doc.setFont('helvetica','normal');
-  const dl=doc.splitTextToSize(opp.descricao||'',W-2*m);doc.text(dl.slice(0,14),m,y);y+=Math.min(dl.length,14)*4.5+12;
-  rgb(navy);doc.rect(m,y,W-2*m,8,'F');txt(white);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('DADOS DO PROJETO',m+4,y+5.5);y+=14;
-  const fields=[['Fase',opp.fase||''],['Sector',opp.sector],['Município',opp.municipio],['Área',opp.area?Math.round(opp.area)+' ha':'—'],['Investimento','€ '+opp.investimento.toLocaleString('pt-PT')],['Postos Trabalho',opp.jobs?opp.jobs+' diretos':'—'],['Retorno',opp.retorno||'—'],['Horizonte',opp.horizonte||'—'],['Estado',opp.estado]];
-  const half=Math.ceil(fields.length/2),cw=(W-2*m-8)/2;
-  fields.forEach((f,i)=>{const col=i<half?0:1,row=i<half?i:i-half,fx=m+col*(cw+8),fy=y+row*16;rgb(lb);doc.rect(fx,fy,cw,13,'F');drw([220,225,235]);doc.setLineWidth(0.2);doc.rect(fx,fy,cw,13);txt(gray);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(f[0],fx+4,fy+5.5);const isInv=f[0]==='Investimento';txt(isInv?navy:ink);doc.setFontSize(isInv?9:8.5);doc.setFont('helvetica',isInv?'bold':'normal');doc.text(f[1].substring(0,32),fx+4,fy+11);});
+
+  // Descricao
+  rgb(navy); doc.rect(m,y,W-2*m,8,'F');
+  txt(white); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text((ui.description||'DESCRICAO').toUpperCase(),m+4,y+5.5);
+  y+=14;
+
+  // Usar descricao em PT (guardada separadamente)
+  const descPT = opp.descricao_pt || opp.descricao || '';
+  txt(ink); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  const dl=doc.splitTextToSize(descPT,W-2*m);
+  doc.text(dl.slice(0,14),m,y);
+  y+=Math.min(dl.length,14)*4.5+12;
+
+  // Dados
+  rgb(navy); doc.rect(m,y,W-2*m,8,'F');
+  txt(white); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text((ui.project_data||'DADOS DO PROJETO').toUpperCase(),m+4,y+5.5);
+  y+=14;
+
+  const fields=[
+    ['Fase', opp.fase||''],
+    ['Sector', opp.sector||''],
+    [ui.location||'Municipio', opp.municipio||''],
+    [ui.area||'Area', opp.area?Math.round(opp.area)+' ha':'--'],
+    ['Investimento', 'EUR '+opp.investimento.toLocaleString('pt-PT')],
+    [ui.jobs||'Postos Trabalho', opp.jobs?opp.jobs+' diretos':'--'],
+    [ui.expected_return||'Retorno', opp.retorno||'--'],
+    [ui.horizon||'Horizonte', opp.horizonte||'--'],
+    ['Estado', opp.estado||''],
+  ];
+
+  const half=Math.ceil(fields.length/2);
+  const cw=(W-2*m-8)/2;
+  fields.forEach((f,i)=>{
+    const col=i<half?0:1;
+    const row=i<half?i:i-half;
+    const fx=m+col*(cw+8);
+    const fy=y+row*16;
+    rgb(lb); doc.rect(fx,fy,cw,13,'F');
+    drw([220,225,235]); doc.setLineWidth(0.2); doc.rect(fx,fy,cw,13);
+    txt(gray); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(f[0].substring(0,25),fx+4,fy+5.5);
+    const isInv=i===4;
+    txt(isInv?navy:ink);
+    doc.setFontSize(isInv?9:8.5);
+    doc.setFont('helvetica',isInv?'bold':'normal');
+    doc.text((f[1]||'--').toString().substring(0,32),fx+4,fy+11);
+  });
   y+=half*16+14;
-  rgb(lb);doc.rect(m,y,W-2*m,28,'F');drw([180,195,220]);doc.setLineWidth(0.4);doc.rect(m,y,W-2*m,28);
-  txt(navy);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text('Para mais informações sobre esta oportunidade',m+6,y+10);
-  txt(gray);doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.text('Contacte a equipa ADPI para obter informação detalhada.',m+6,y+17);
-  txt(navy);doc.setFontSize(9);doc.text('investimento@adpi.pt',m+6,y+25);doc.text('+351 266 000 000',m+80,y+25);
+
+  // Contacto
+  rgb(lb); doc.rect(m,y,W-2*m,28,'F');
+  drw([180,195,220]); doc.setLineWidth(0.4); doc.rect(m,y,W-2*m,28);
+  txt(navy); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text(ui.contact_more||'Para mais informacoes sobre esta oportunidade',m+6,y+10);
+  txt(gray); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+  doc.text(ui.contact_sub||'Contacte a equipa ADPI.',m+6,y+17);
+  txt(navy); doc.setFontSize(9);
+  doc.text('investimento@adpi.pt',m+6,y+25);
+  doc.text('+351 266 000 000',m+80,y+25);
+
+  // Footer todas as paginas
   const tp=doc.getNumberOfPages();
-  for(let p=1;p<=tp;p++){doc.setPage(p);rgb(lb);doc.rect(0,H-7,W,7,'F');txt(gray);doc.setFontSize(6.5);doc.text('ADPI © '+new Date().getFullYear()+' · Confidencial',m,H-2.5);doc.text('Pág '+p+'/'+tp,W-m-12,H-2.5);}
-  doc.save('adpi-'+opp.titulo.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'.pdf');
+  for(let p=1;p<=tp;p++){
+    doc.setPage(p);
+    rgb(lb); doc.rect(0,H-7,W,7,'F');
+    txt(gray); doc.setFontSize(6.5);
+    doc.text('ADPI (c) '+new Date().getFullYear()+' - Confidencial',m,H-2.5);
+    doc.text('Pag '+p+'/'+tp,W-m-12,H-2.5);
+  }
+
+  const fname='adpi-'+(opp.titulo||'oportunidade').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'.pdf';
+  doc.save(fname);
 }
 </script>
 {% endblock %}
