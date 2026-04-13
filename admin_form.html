@@ -185,9 +185,7 @@ select.fi{cursor:pointer}
             {% for p in opp.photos %}
             <div class="ep-w">
               <img src="/uploads/{{ p.filename }}" alt="foto"/>
-              <form method="post" action="/admin/remover-foto/{{ opp.id }}/{{ p.filename }}" style="display:inline">
-                <button type="submit" class="ep-del">✕</button>
-              </form>
+              <button type="button" class="ep-del" onclick="removerFoto({{ opp.id }}, '{{ p.filename }}')">&#10005;</button>
             </div>
             {% endfor %}
           </div>
@@ -205,10 +203,8 @@ select.fi{cursor:pointer}
           <div class="ed">
             {% for d in opp.docs %}
             <div class="ed-i" style="justify-content:space-between">
-              <span>📄 {{ d.original }}</span>
-              <form method="post" action="/admin/remover-doc/{{ opp.id }}/{{ d.filename }}" style="display:inline;margin-left:8px">
-                <button type="submit" style="background:#a0281e;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">✕</button>
-              </form>
+              <span>&#128196; {{ d.original }}</span>
+              <button type="button" onclick="removerDoc({{ opp.id }}, '{{ d.filename }}')" style="background:#a0281e;color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer;flex-shrink:0">&#10005;</button>
             </div>
             {% endfor %}
           </div>
@@ -226,6 +222,17 @@ select.fi{cursor:pointer}
 {% endblock %}
 {% block scripts %}
 <script>
+// Delete photo/doc via fetch POST - avoids nested form problem
+function removerFoto(oppId, filename) {
+  if (!confirm('Eliminar esta foto?')) return;
+  fetch('/admin/remover-foto/' + oppId + '/' + filename, {method:'POST'})
+    .then(function(r){ if(r.ok || r.redirected) window.location.reload(); });
+}
+function removerDoc(oppId, filename) {
+  if (!confirm('Eliminar este documento?')) return;
+  fetch('/admin/remover-doc/' + oppId + '/' + filename, {method:'POST'})
+    .then(function(r){ if(r.ok || r.redirected) window.location.reload(); });
+}
 function selectContentLang(code, el) {
   document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
