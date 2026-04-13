@@ -162,10 +162,17 @@ def translate_opp(opp, target_lang):
         o['titulo']    = _google(opp.get('titulo',''), target_lang, source_lang)
         o['descricao'] = _google(opp.get('descricao',''), target_lang, source_lang)
         o['sector']    = _google(opp.get('sector',''), target_lang, source_lang)
-        o['estado']    = _google(opp.get('estado',''), target_lang, source_lang)
-        o['retorno']   = _google(opp.get('retorno',''), target_lang, source_lang)
-        o['horizonte'] = _google(opp.get('horizonte',''), target_lang, source_lang)
+        o['estado']    = _google(opp.get('estado','Disponível'), target_lang, 'pt')  # estado always stored in PT
+        # Traduzir retorno e horizonte com prefixo de contexto para evitar erros
+        raw_ret = opp.get('retorno','')
+        raw_hor = opp.get('horizonte','')
+        # Traduzir apenas se tiver valor
+        o['retorno']   = _google(raw_ret, target_lang, source_lang) if raw_ret else ''
+        o['horizonte'] = _google(raw_hor, target_lang, source_lang) if raw_hor else ''
+        # Corrigir "years old" -> usar tradução de "anos" isolado
         o['direct_label'] = _google('diretos', target_lang, 'pt')
+        o['years_label']  = _google('anos', target_lang, 'pt')
+        o['year_label']   = _google('ano', target_lang, 'pt')
     else:
         o['direct_label'] = 'diretos'
     return o
