@@ -7,6 +7,7 @@ from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, send_from_directory)
 from werkzeug.utils import secure_filename
 import pg8000
+from translations import LANGUAGES, translate_ui, translate_opp, translate_text
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'adpi-secret-2026')
@@ -35,8 +36,6 @@ MUNICIPIOS = [
 # ---------- DB ----------
 
 def parse_db_url(url):
-    # Format: postgresql://user:pass@host:port/dbname
-    # Handles special chars in password
     url = url.replace('postgresql://', '').replace('postgres://', '')
     userinfo, rest = url.split('@', 1)
     user, password = userinfo.split(':', 1)
@@ -47,20 +46,13 @@ def parse_db_url(url):
     else:
         host = hostport
         port = 5432
-    # Remove query params from dbname
     dbname = dbname.split('?')[0]
     return user, password, host, port, dbname
 
 def get_conn():
     user, password, host, port, dbname = parse_db_url(DATABASE_URL)
-    return pg8000.connect(
-        host=host,
-        port=port,
-        database=dbname,
-        user=user,
-        password=password,
-        ssl_context=True
-    )
+    return pg8000.connect(host=host, port=port, database=dbname,
+                          user=user, password=password, ssl_context=True)
 
 def fetchall_dict(cur):
     cols = [d[0] for d in cur.description]
@@ -182,18 +174,11 @@ def update_opp(opp_id, data):
     cur.close()
     conn.close()
 
-def update_opp_photos(opp_id, photos):
+def update_opp_media(opp_id, photos, docs):
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("UPDATE opportunities SET photos=%s WHERE id=%s", (json.dumps(photos), opp_id))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-def update_opp_docs(opp_id, docs):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("UPDATE opportunities SET docs=%s WHERE id=%s", (json.dumps(docs), opp_id))
+    cur.execute("UPDATE opportunities SET photos=%s, docs=%s WHERE id=%s",
+                (json.dumps(photos), json.dumps(docs), opp_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -222,6 +207,17 @@ def parse_opp(o):
         o['docs'] = json.loads(o['docs'])
     return o
 
+# ---------- Language ----------
+
+def get_lang():
+    return session.get('lang', 'pt')
+
+@app.route('/lang/<code>')
+def set_lang(code):
+    if code in LANGUAGES:
+        session['lang'] = code
+    return redirect(request.referrer or url_for('index'))
+
 # ---------- Auth ----------
 
 def login_required(f):
@@ -249,21 +245,29 @@ def save_uploads(files_key, existing=None):
 
 @app.route('/')
 def index():
+    lang = get_lang()
     sector = request.args.get('sector','')
     fase = request.args.get('fase','')
     q = request.args.get('q','')
-    opps = [parse_opp(o) for o in get_all_opps(sector, fase, q)]
+    raw_opps = get_all_opps(sector, fase, q)
+    opps = [translate_opp(parse_opp(o), lang) for o in raw_opps]
     used_sectors = sorted(set(o['sector'].split(' ')[0] for o in get_all_opps()))
+    ui = translate_ui(lang)
     return render_template('portal.html', opportunities=opps,
-                           sectors=used_sectors, sector=sector, fase=fase, q=q)
+                           sectors=used_sectors, sector=sector, fase=fase, q=q,
+                           ui=ui, lang=lang, languages=LANGUAGES,
+                           rtl=LANGUAGES[lang]['rtl'])
 
 @app.route('/oportunidade/<int:opp_id>')
 def oportunidade(opp_id):
-    opp = parse_opp(get_opp(opp_id))
+    lang = get_lang()
+    opp = translate_opp(parse_opp(get_opp(opp_id)), lang)
     if not opp: return redirect(url_for('index'))
-    return render_template('detalhe.html', opp=opp)
+    ui = translate_ui(lang)
+    return render_template('detalhe.html', opp=opp, ui=ui, lang=lang,
+                           languages=LANGUAGES, rtl=LANGUAGES[lang]['rtl'])
 
-# ---------- Admin ----------
+# ---------- Admin (always PT) ----------
 
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
@@ -272,7 +276,8 @@ def admin_login():
             session['admin'] = True
             return redirect(url_for('admin_dashboard'))
         flash('Password incorreta.','error')
-    return render_template('login.html')
+    return render_template('login.html', languages=LANGUAGES, lang=get_lang(),
+                           rtl=False, ui=translate_ui('pt'))
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -284,7 +289,9 @@ def admin_logout():
 def admin_dashboard():
     opps = [parse_opp(o) for o in get_all_opps()]
     stats = get_stats()
-    return render_template('admin_dashboard.html', opportunities=opps, stats=stats)
+    return render_template('admin_dashboard.html', opportunities=opps, stats=stats,
+                           languages=LANGUAGES, lang=get_lang(), rtl=False,
+                           ui=translate_ui('pt'))
 
 @app.route('/admin/nova', methods=['GET','POST'])
 @login_required
@@ -310,7 +317,9 @@ def admin_nova():
         create_opp(data)
         flash('Oportunidade publicada com sucesso!','success')
         return redirect(url_for('admin_dashboard'))
-    return render_template('admin_form.html', opp=None, sectors=SECTORS, municipios=MUNICIPIOS)
+    return render_template('admin_form.html', opp=None, sectors=SECTORS,
+                           municipios=MUNICIPIOS, languages=LANGUAGES,
+                           lang=get_lang(), rtl=False, ui=translate_ui('pt'))
 
 @app.route('/admin/editar/<int:opp_id>', methods=['GET','POST'])
 @login_required
@@ -334,11 +343,12 @@ def admin_editar(opp_id):
             'estado': request.form.get('estado','Disponível'),
         }
         update_opp(opp_id, data)
-        update_opp_photos(opp_id, photos)
-        update_opp_docs(opp_id, docs)
+        update_opp_media(opp_id, photos, docs)
         flash('Oportunidade atualizada!','success')
         return redirect(url_for('admin_dashboard'))
-    return render_template('admin_form.html', opp=opp, sectors=SECTORS, municipios=MUNICIPIOS)
+    return render_template('admin_form.html', opp=opp, sectors=SECTORS,
+                           municipios=MUNICIPIOS, languages=LANGUAGES,
+                           lang=get_lang(), rtl=False, ui=translate_ui('pt'))
 
 @app.route('/admin/eliminar/<int:opp_id>', methods=['POST'])
 @login_required
@@ -353,7 +363,7 @@ def remover_foto(opp_id, filename):
     opp = parse_opp(get_opp(opp_id))
     if opp:
         photos = [p for p in opp['photos'] if p['filename'] != filename]
-        update_opp_photos(opp_id, photos)
+        update_opp_media(opp_id, photos, opp['docs'])
         try: os.remove(os.path.join(UPLOAD_FOLDER, filename))
         except: pass
     return redirect(url_for('admin_editar', opp_id=opp_id))
