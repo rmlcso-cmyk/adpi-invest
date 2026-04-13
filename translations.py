@@ -153,14 +153,19 @@ def translate_opp(opp, target_lang):
     if not opp: return opp
     source_lang = opp.get('content_lang', 'pt')
     o = dict(opp)
-    # Guardar originais
+    # Guardar originais PT para PDF
     o['titulo_orig']    = opp.get('titulo', '')
     o['descricao_orig'] = opp.get('descricao', '')
     o['sector_pt']      = opp.get('sector', '')
-    o['estado_pt']      = opp.get('estado', 'Disponível')
+    o['estado_pt']      = opp.get('estado', 'Disponivel')
     if target_lang != source_lang:
         o['titulo']    = _google(opp.get('titulo',''), target_lang, source_lang)
         o['descricao'] = _google(opp.get('descricao',''), target_lang, source_lang)
         o['sector']    = _google(opp.get('sector',''), target_lang, source_lang)
         o['estado']    = _google(opp.get('estado',''), target_lang, source_lang)
+        o['retorno']   = _google(opp.get('retorno',''), target_lang, source_lang)
+        o['horizonte'] = _google(opp.get('horizonte',''), target_lang, source_lang)
+        o['direct_label'] = _google('diretos', target_lang, 'pt')
+    else:
+        o['direct_label'] = 'diretos'
     return o

@@ -59,7 +59,7 @@
 
 <div class="body-wrap">
   <div>
-    <a href="/" class="back-link">← {{ ui.back }}</a>
+    <a href="/" class="back-link">&#8592; {{ ui.back }}</a>
     {% if opp.photos %}
     <div class="gallery">{% for p in opp.photos %}<img src="/uploads/{{ p.filename }}" alt="{{ opp.titulo }}"/>{% endfor %}</div>
     {% else %}<div class="no-gallery">&#127807;</div>{% endif %}
@@ -72,10 +72,10 @@
     <div class="sec-card">
       <div class="sec-title">{{ ui.project_data }}</div>
       <div class="kpis">
-        <div class="kpi"><div class="kpi-l">{{ ui.min_investment }}</div><div class="kpi-v big">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div></div>
+        <div class="kpi"><div class="kpi-l">{{ ui.min_investment }}</div><div class="kpi-v big">&#8364; {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div></div>
         <div class="kpi"><div class="kpi-l">{{ ui.location }}</div><div class="kpi-v">{{ opp.municipio }}</div></div>
         {% if opp.area %}<div class="kpi"><div class="kpi-l">{{ ui.area }}</div><div class="kpi-v">{{ opp.area|int }} {{ ui.hectares }}</div></div>{% endif %}
-        {% if opp.jobs %}<div class="kpi"><div class="kpi-l">{{ ui.jobs }}</div><div class="kpi-v">{{ opp.jobs }} {{ ui.direct }}</div></div>{% endif %}
+        {% if opp.jobs %}<div class="kpi"><div class="kpi-l">{{ ui.jobs }}</div><div class="kpi-v">{{ opp.jobs }} {{ opp.get('direct_label', ui.direct) }}</div></div>{% endif %}
         {% if opp.retorno %}<div class="kpi"><div class="kpi-l">{{ ui.expected_return }}</div><div class="kpi-v">{{ opp.retorno }}</div></div>{% endif %}
         {% if opp.horizonte %}<div class="kpi"><div class="kpi-l">{{ ui.horizon }}</div><div class="kpi-v">{{ opp.horizonte }}</div></div>{% endif %}
       </div>
@@ -96,7 +96,7 @@
   <div>
     <div class="sidebar">
       <span class="est-badge {{ ec }}">{{ opp.estado }}</span>
-      <div class="invest-v">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div>
+      <div class="invest-v">&#8364; {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div>
       <div class="invest-sub">{{ ui.min_investment }}</div>
       <button class="btn-pdf" onclick="gerarPDF()">&#11015; {{ ui.download_pdf }}</button>
       <button class="btn-contact" onclick="document.getElementById('ct').scrollIntoView({behavior:'smooth'})">{{ ui.contact_team }}</button>
@@ -112,157 +112,171 @@
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-const {jsPDF}=window.jspdf;
-const opp={{ opp|tojson }};
-const ui={{ ui|tojson }};
+const {jsPDF} = window.jspdf;
+const ui = {{ ui|tojson }};
 
-function fmt(n){return Number(n).toLocaleString('pt-PT');}
+// Todos os valores já traduzidos pelo servidor
+const opp = {
+  titulo:      {{ opp.titulo|tojson }},
+  descricao:   {{ opp.get('descricao_orig', opp.descricao)|tojson }},
+  sector:      {{ opp.get('sector_pt', opp.sector)|tojson }},
+  municipio:   {{ opp.municipio|tojson }},
+  investimento: {{ opp.investimento }},
+  area:        {{ opp.area or 0 }},
+  jobs:        {{ opp.jobs or 0 }},
+  retorno:     {{ opp.retorno|tojson }},
+  horizonte:   {{ opp.horizonte|tojson }},
+  fase:        {{ opp.get('fase','')|tojson }},
+  estado:      {{ opp.get('estado_pt', opp.estado)|tojson }},
+  direct:      {{ opp.get('direct_label', 'diretos')|tojson }},
+};
+
+function fmt(n){ return Number(n).toLocaleString('pt-PT'); }
+function safe(s){ return (s||'--').toString().substring(0,50); }
 
 function gerarPDF(){
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210,H=297,m=20;
-  const navy=[10,22,40],gold=[201,168,76],white=[255,255,255],
-        gray=[100,100,100],ink=[26,26,26],lb=[235,240,250],nl=[19,32,64];
-  const rgb=a=>doc.setFillColor(...a);
-  const txt=a=>doc.setTextColor(...a);
-  const drw=a=>doc.setDrawColor(...a);
+  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  const W=210, H=297, m=20;
+  const navy=[10,22,40], gold=[201,168,76], white=[255,255,255],
+        gray=[100,100,100], ink=[26,26,26], lb=[235,240,250], nl=[19,32,64];
 
-  // CAPA
-  rgb(navy);doc.rect(0,0,W,H,'F');
-  rgb(nl);doc.rect(0,0,W,75,'F');
-  rgb(gold);doc.rect(0,93,W,1.5,'F');
+  const rgb = a => doc.setFillColor(...a);
+  const txt = a => doc.setTextColor(...a);
+  const drw = a => doc.setDrawColor(...a);
 
-  txt(gold);doc.setFontSize(36);doc.setFont('helvetica','bold');
-  doc.text('ADPI',m,52);
-  doc.setTextColor(180,180,180);doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text('ABU DHABI - PORTUGAL INVESTMENT PLATFORM',m,60);
+  // ── CAPA ──
+  rgb(navy); doc.rect(0,0,W,H,'F');
+  rgb(nl);   doc.rect(0,0,W,75,'F');
+  rgb(gold); doc.rect(0,93,W,1.5,'F');
 
-  const isp1=opp.fase&&opp.fase.includes('1.0');
-  rgb(isp1?gold:[26,95,168]);
-  doc.roundedRect(m,68,60,7,2,2,'F');
-  txt(isp1?navy:white);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
-  doc.text(opp.fase||'',m+4,73);
+  txt(gold); doc.setFontSize(36); doc.setFont('helvetica','bold');
+  doc.text('ADPI', m, 52);
+  doc.setTextColor(180,180,180); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text('ABU DHABI - PORTUGAL INVESTMENT PLATFORM', m, 60);
 
-  // Sector em PT original
-  const sectorPdf=(opp.sector_pt||opp.sector||'').toUpperCase();
-  doc.setTextColor(150,170,200);doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.text(sectorPdf.substring(0,50),m,84);
+  const isp1 = opp.fase && opp.fase.includes('1.0');
+  rgb(isp1 ? gold : [26,95,168]);
+  doc.roundedRect(m, 68, 60, 7, 2, 2, 'F');
+  txt(isp1 ? navy : white);
+  doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+  doc.text(safe(opp.fase), m+4, 73);
 
-  // Titulo traduzido
-  txt(white);doc.setFontSize(20);doc.setFont('helvetica','bold');
-  const tl=doc.splitTextToSize(opp.titulo||'',W-2*m);
-  doc.text(tl,m,112);
+  doc.setTextColor(150,170,200); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(opp.sector.toUpperCase().substring(0,50), m, 84);
 
-  doc.setTextColor(160,180,160);doc.setFontSize(11);doc.setFont('helvetica','normal');
-  const locTxt=opp.municipio+(opp.area?' | '+Math.round(opp.area)+' ha':'');
-  doc.text(locTxt,m,119+tl.length*9);
+  txt(white); doc.setFontSize(20); doc.setFont('helvetica','bold');
+  const tl = doc.splitTextToSize(opp.titulo, W-2*m);
+  doc.text(tl, m, 112);
 
-  // Caixa investimento
-  rgb(nl);doc.rect(m,155,W-2*m,28,'F');
-  doc.setTextColor(150,170,200);doc.setFontSize(8);
-  doc.text((ui.min_investment||'INVESTIMENTO MINIMO').toUpperCase(),m+6,164);
-  txt(gold);doc.setFontSize(22);doc.setFont('helvetica','bold');
-  doc.text('EUR '+fmt(opp.investimento),m+6,177);
+  doc.setTextColor(160,180,160); doc.setFontSize(11); doc.setFont('helvetica','normal');
+  const locTxt = opp.municipio + (opp.area ? ' | ' + Math.round(opp.area) + ' ha' : '');
+  doc.text(locTxt, m, 119 + tl.length*9);
 
-  // KPIs - labels traduzidas
-  const kpis=[
-    {l:ui.area||'Area', v:opp.area?Math.round(opp.area)+' ha':'--'},
-    {l:ui.jobs||'Emprego', v:opp.jobs?opp.jobs+' dir.':'--'},
-    {l:ui.expected_return||'Retorno', v:opp.retorno||'--'},
-    {l:ui.horizon||'Horizonte', v:opp.horizonte||'--'}
+  // Investment box
+  rgb(nl); doc.rect(m, 155, W-2*m, 28, 'F');
+  doc.setTextColor(150,170,200); doc.setFontSize(8);
+  doc.text((ui.min_investment||'INVESTIMENTO MINIMO').toUpperCase(), m+6, 164);
+  txt(gold); doc.setFontSize(22); doc.setFont('helvetica','bold');
+  doc.text('EUR ' + fmt(opp.investimento), m+6, 177);
+
+  // KPIs — valores já traduzidos
+  const kpis = [
+    {l: ui.area||'Area',            v: opp.area ? Math.round(opp.area)+' ha' : '--'},
+    {l: ui.jobs||'Jobs',            v: opp.jobs ? opp.jobs+' '+opp.direct : '--'},
+    {l: ui.expected_return||'Return', v: safe(opp.retorno)},
+    {l: ui.horizon||'Horizon',      v: safe(opp.horizonte)},
   ];
-  const kW=(W-2*m-9)/4;
-  kpis.forEach((k,i)=>{
-    const kx=m+i*(kW+3);
-    rgb(nl);doc.rect(kx,200,kW,18,'F');
-    doc.setTextColor(130,155,180);doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text(k.l.substring(0,18),kx+4,207);
-    txt(white);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
-    doc.text(k.v.toString().substring(0,14),kx+4,214);
+  const kW = (W-2*m-9)/4;
+  kpis.forEach((k,i) => {
+    const kx = m + i*(kW+3);
+    rgb(nl); doc.rect(kx, 200, kW, 18, 'F');
+    doc.setTextColor(130,155,180); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(k.l.substring(0,18), kx+4, 207);
+    txt(white); doc.setFontSize(8.5); doc.setFont('helvetica','bold');
+    doc.text(k.v.substring(0,16), kx+4, 214);
   });
 
-  doc.setTextColor(80,100,130);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text((ui.pdf_generated||'Gerado em')+' '+new Date().toLocaleDateString('pt-PT')+' - '+(ui.pdf_confidential||'Confidencial'),m,H-10);
+  doc.setTextColor(80,100,130); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  doc.text((ui.pdf_generated||'Generated')+' '+new Date().toLocaleDateString('pt-PT')+' - '+(ui.pdf_confidential||'Confidential'), m, H-10);
 
-  // PAG 2
+  // ── PÁG 2 ──
   doc.addPage();
-  rgb(navy);doc.rect(0,0,W,18,'F');
-  txt(gold);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('ADPI',m,12);
-  doc.setTextColor(180,180,180);doc.setFontSize(8);doc.setFont('helvetica','normal');
-  doc.text((opp.titulo||'').substring(0,50)+' - '+(ui.project_data||'Ficha Tecnica'),m+18,12);
+  rgb(navy); doc.rect(0,0,W,18,'F');
+  txt(gold); doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.text('ADPI', m, 12);
+  doc.setTextColor(180,180,180); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text(opp.titulo.substring(0,50)+' - '+(ui.project_data||'Project Data'), m+18, 12);
 
-  let y=30;
+  let y = 30;
 
-  // Descricao — usar titulo da UI traduzido
-  rgb(navy);doc.rect(m,y,W-2*m,8,'F');
-  txt(white);doc.setFontSize(8);doc.setFont('helvetica','bold');
-  doc.text((ui.description||'Descricao').toUpperCase(),m+4,y+5.5);
-  y+=14;
+  // Descrição — sempre em PT original
+  rgb(navy); doc.rect(m,y,W-2*m,8,'F');
+  txt(white); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text((ui.description||'Description').toUpperCase(), m+4, y+5.5);
+  y += 14;
+  txt(ink); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  const dl = doc.splitTextToSize(opp.descricao||'', W-2*m);
+  doc.text(dl.slice(0,14), m, y);
+  y += Math.min(dl.length,14)*4.5 + 12;
 
-  // Descricao PT original para PDF
-  const descPDF=opp.descricao_pt||opp.descricao||'';
-  txt(ink);doc.setFontSize(9);doc.setFont('helvetica','normal');
-  const dl=doc.splitTextToSize(descPDF,W-2*m);
-  doc.text(dl.slice(0,14),m,y);
-  y+=Math.min(dl.length,14)*4.5+12;
+  // Tabela dados — labels e valores traduzidos
+  rgb(navy); doc.rect(m,y,W-2*m,8,'F');
+  txt(white); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text((ui.project_data||'Project Data').toUpperCase(), m+4, y+5.5);
+  y += 14;
 
-  // Tabela dados — labels traduzidas
-  rgb(navy);doc.rect(m,y,W-2*m,8,'F');
-  txt(white);doc.setFontSize(8);doc.setFont('helvetica','bold');
-  doc.text((ui.project_data||'Dados').toUpperCase(),m+4,y+5.5);
-  y+=14;
-
-  const fields=[
-    [ui.fase_label_pdf||'Fase',          opp.fase||''],
-    [ui.sector_label_pdf||'Sector',      opp.sector_pt||opp.sector||''],
-    [ui.location||'Municipio',           opp.municipio||''],
-    [ui.area||'Area',                    opp.area?Math.round(opp.area)+' ha':'--'],
-    [ui.min_investment||'Investimento',  'EUR '+fmt(opp.investimento)],
-    [ui.jobs||'Postos de Trabalho',      opp.jobs?opp.jobs+' diretos':'--'],
-    [ui.expected_return||'Retorno',      opp.retorno||'--'],
-    [ui.horizon||'Horizonte',            opp.horizonte||'--'],
-    ['Estado',                           opp.estado_pt||opp.estado||''],
+  const fields = [
+    [ui.fase_label_pdf||'Phase',          safe(opp.fase)],
+    [ui.sector_label_pdf||'Sector',       safe(opp.sector)],
+    [ui.location||'Location',             safe(opp.municipio)],
+    [ui.area||'Area',                     opp.area ? Math.round(opp.area)+' ha' : '--'],
+    [ui.min_investment||'Min. Investment','EUR '+fmt(opp.investimento)],
+    [ui.jobs||'Jobs',                     opp.jobs ? opp.jobs+' '+opp.direct : '--'],
+    [ui.expected_return||'Return',        safe(opp.retorno)],
+    [ui.horizon||'Horizon',              safe(opp.horizonte)],
+    [ui.estado_label||'Status',           safe(opp.estado)],
   ];
 
-  const half=Math.ceil(fields.length/2);
-  const cw=(W-2*m-8)/2;
-  fields.forEach((f,i)=>{
-    const col=i<half?0:1,row=i<half?i:i-half;
-    const fx=m+col*(cw+8),fy=y+row*16;
-    rgb(lb);doc.rect(fx,fy,cw,13,'F');
-    drw([220,225,235]);doc.setLineWidth(0.2);doc.rect(fx,fy,cw,13);
-    txt(gray);doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text(f[0].substring(0,25),fx+4,fy+5.5);
-    const isInv=i===4;
-    txt(isInv?navy:ink);
-    doc.setFontSize(isInv?9:8.5);
-    doc.setFont('helvetica',isInv?'bold':'normal');
-    doc.text((f[1]||'--').toString().substring(0,32),fx+4,fy+11);
+  const half = Math.ceil(fields.length/2);
+  const cw = (W-2*m-8)/2;
+  fields.forEach((f,i) => {
+    const col = i<half ? 0 : 1;
+    const row = i<half ? i : i-half;
+    const fx = m + col*(cw+8);
+    const fy = y + row*16;
+    rgb(lb); doc.rect(fx,fy,cw,13,'F');
+    drw([220,225,235]); doc.setLineWidth(0.2); doc.rect(fx,fy,cw,13);
+    txt(gray); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(f[0].substring(0,25), fx+4, fy+5.5);
+    const isInv = i===4;
+    txt(isInv ? navy : ink);
+    doc.setFontSize(isInv ? 9 : 8.5);
+    doc.setFont('helvetica', isInv ? 'bold' : 'normal');
+    doc.text(f[1].substring(0,32), fx+4, fy+11);
   });
-  y+=half*16+14;
+  y += half*16 + 14;
 
   // Contacto
-  rgb(lb);doc.rect(m,y,W-2*m,28,'F');
-  drw([180,195,220]);doc.setLineWidth(0.4);doc.rect(m,y,W-2*m,28);
-  txt(navy);doc.setFontSize(10);doc.setFont('helvetica','bold');
-  doc.text((ui.contact_more||'Para mais informacoes').substring(0,55),m+6,y+10);
-  txt(gray);doc.setFontSize(8.5);doc.setFont('helvetica','normal');
-  doc.text((ui.contact_sub||'Contacte a equipa ADPI.').substring(0,70),m+6,y+17);
-  txt(navy);doc.setFontSize(9);
-  doc.text('investimento@adpi.pt',m+6,y+25);
-  doc.text('+351 266 000 000',m+80,y+25);
+  rgb(lb); doc.rect(m,y,W-2*m,28,'F');
+  drw([180,195,220]); doc.setLineWidth(0.4); doc.rect(m,y,W-2*m,28);
+  txt(navy); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text((ui.contact_more||'For more information').substring(0,55), m+6, y+10);
+  txt(gray); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+  doc.text((ui.contact_sub||'Contact the ADPI team.').substring(0,70), m+6, y+17);
+  txt(navy); doc.setFontSize(9);
+  doc.text('investimento@adpi.pt', m+6, y+25);
+  doc.text('+351 266 000 000', m+80, y+25);
 
   // Footer
-  const tp=doc.getNumberOfPages();
-  for(let p=1;p<=tp;p++){
+  const tp = doc.getNumberOfPages();
+  for(let p=1; p<=tp; p++){
     doc.setPage(p);
-    rgb(lb);doc.rect(0,H-7,W,7,'F');
-    txt(gray);doc.setFontSize(6.5);
-    doc.text('ADPI (c) '+new Date().getFullYear()+' - '+(ui.pdf_confidential||'Confidencial'),m,H-2.5);
-    doc.text((ui.pdf_page||'Pag')+' '+p+'/'+(ui.pdf_of||'')+tp,W-m-16,H-2.5);
+    rgb(lb); doc.rect(0,H-7,W,7,'F');
+    txt(gray); doc.setFontSize(6.5);
+    doc.text('ADPI (c) '+new Date().getFullYear()+' - '+(ui.pdf_confidential||'Confidential'), m, H-2.5);
+    doc.text((ui.pdf_page||'Page')+' '+p+'/'+tp, W-m-16, H-2.5);
   }
 
-  const fname='adpi-'+(opp.titulo_pt||opp.titulo||'opp').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'.pdf';
+  const fname = 'adpi-'+opp.titulo.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'.pdf';
   doc.save(fname);
 }
 </script>
