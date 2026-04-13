@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Acesso Admin — ADPI{% endblock %}
+{% block title %}Admin — ADPI{% endblock %}
 {% block extra_style %}
-.login-wrap{min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--bg)}
+.login-wrap{min-height:calc(100vh - 70px);display:flex;align-items:center;justify-content:center;padding:2rem}
 .login-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:360px}
 .login-brand{font-size:28px;font-weight:800;color:var(--navy);letter-spacing:0.12em;margin-bottom:4px}
 .login-brand span{color:var(--gold)}
@@ -20,17 +20,17 @@
   <div class="login-card">
     <div class="login-brand">AD<span>PI</span></div>
     <div class="login-sub">Abu Dhabi · Portugal Investment</div>
-    <h2>Acesso Restrito</h2>
-    <p>Esta área é reservada à equipa ADPI para gestão das oportunidades de investimento publicadas no portal.</p>
+    <h2>{{ ui.login_title }}</h2>
+    <p>{{ ui.login_sub }}</p>
     <form method="post">
       <div class="f-wrap">
-        <div class="f-label">Password de administrador</div>
+        <div class="f-label">{{ ui.password_label }}</div>
         <input type="password" name="password" placeholder="••••••••" autofocus required/>
       </div>
-      <button type="submit" class="btn-login">Entrar na área de administração</button>
+      <button type="submit" class="btn-login">{{ ui.login_btn }}</button>
     </form>
     <p style="font-size:11px;color:var(--hint);text-align:center;margin-top:1rem">
-      <a href="/" style="color:var(--blue)">← Voltar ao portal</a>
+      <a href="/" style="color:var(--blue)">{{ ui.back_portal }}</a>
     </p>
   </div>
 </div>

@@ -2,7 +2,7 @@
 {% block title %}Dashboard — ADPI Admin{% endblock %}
 {% block extra_style %}
 .wrap{max-width:1100px;margin:2rem auto;padding:0 1.5rem}
-.pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.pg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
 .pg-head h2{font-size:18px;font-weight:700;color:var(--ink)}
 .pg-head p{font-size:12px;color:var(--muted);margin-top:2px}
 .btn-p{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:7px;background:var(--navy);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;transition:background 0.15s}
@@ -11,16 +11,13 @@
 .btn-s:hover{background:var(--bg)}
 .btn-del{display:inline-flex;align-items:center;padding:6px 10px;border-radius:6px;background:#fff3f3;color:#a0281e;border:1px solid #f5c6c6;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
 .btn-del:hover{background:#fde8e8}
-.btn-edit{display:inline-flex;align-items:center;padding:6px 10px;border-radius:6px;background:var(--bg);color:var(--navy);border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.15s}
+.btn-edit{display:inline-flex;align-items:center;padding:6px 12px;border-radius:6px;background:var(--bg);color:var(--navy);border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.15s}
 .btn-edit:hover{background:#e8eef8}
-
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
 .stat{background:#fff;border:1px solid var(--border);border-radius:9px;padding:1rem 1.25rem}
 .stat-l{font-size:11px;color:var(--hint);margin-bottom:4px}
 .stat-v{font-size:24px;font-weight:800;color:var(--ink)}
-.stat-v.navy{color:var(--navy)}
 .stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
-
 .tbl{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .tbl-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 120px;padding:10px 1.25rem;background:var(--bg);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--hint);letter-spacing:0.05em;text-transform:uppercase}
 .tbl-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 120px;padding:13px 1.25rem;border-bottom:1px solid var(--border);align-items:center;transition:background 0.12s}
@@ -44,41 +41,41 @@
 <div class="wrap">
   <div class="pg-head">
     <div>
-      <h2>Dashboard ADPI Admin</h2>
-      <p>Gestão das oportunidades publicadas no portal de investimento</p>
+      <h2>{{ ui.dashboard_title }}</h2>
+      <p>{{ ui.dashboard_sub }}</p>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <a href="/admin/nova" class="btn-p">+ Nova Oportunidade</a>
-      <a href="/admin/logout" class="btn-s">Sair</a>
+      <a href="/admin/nova" class="btn-p">{{ ui.new_opp }}</a>
+      <a href="/admin/logout" class="btn-s">{{ ui.logout }}</a>
     </div>
   </div>
 
   <div class="stats">
     <div class="stat">
-      <div class="stat-l">Total de Oportunidades</div>
+      <div class="stat-l">{{ ui.total_opps }}</div>
       <div class="stat-v">{{ stats.total }}</div>
-      <div class="stat-sub">publicadas no portal</div>
+      <div class="stat-sub">{{ ui.published }}</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Investimento Total</div>
-      <div class="stat-v navy" style="font-size:17px;padding-top:4px">€ {{ "{:,.0f}".format(stats.investimento).replace(",",".") }}</div>
-      <div class="stat-sub">soma dos projetos</div>
+      <div class="stat-l">{{ ui.total_invest }}</div>
+      <div class="stat-v" style="font-size:17px;padding-top:4px">€ {{ "{:,.0f}".format(stats.investimento).replace(",",".") }}</div>
+      <div class="stat-sub">{{ ui.sum_projects }}</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Postos de Trabalho</div>
+      <div class="stat-l">{{ ui.total_jobs }}</div>
       <div class="stat-v">{{ stats.jobs }}</div>
-      <div class="stat-sub">criação direta prevista</div>
+      <div class="stat-sub">{{ ui.direct_creation }}</div>
     </div>
     <div class="stat">
-      <div class="stat-l">Sectores</div>
+      <div class="stat-l">{{ ui.sectors }}</div>
       <div class="stat-v">{{ stats.sectors }}</div>
-      <div class="stat-sub">áreas representadas</div>
+      <div class="stat-sub">{{ ui.areas }}</div>
     </div>
   </div>
 
   <div class="tbl">
     <div class="tbl-head">
-      <span>Oportunidade</span><span>Fase</span><span>Sector</span><span>Município</span><span>Investimento</span><span>Ações</span>
+      <span>{{ ui.form_title_new }}</span><span>Fase</span><span>Sector</span><span>Município</span><span>{{ ui.total_invest }}</span><span>{{ ui.edit }}</span>
     </div>
     {% if opportunities %}
       {% for opp in opportunities %}
@@ -94,15 +91,15 @@
         <div class="rc">{{ opp.municipio }}</div>
         <div class="ri">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div>
         <div class="row-act">
-          <a href="/admin/editar/{{ opp.id }}" class="btn-edit">✎ Editar</a>
-          <form method="post" action="/admin/eliminar/{{ opp.id }}" onsubmit="return confirm('Eliminar esta oportunidade?')">
+          <a href="/admin/editar/{{ opp.id }}" class="btn-edit">✎ {{ ui.edit }}</a>
+          <form method="post" action="/admin/eliminar/{{ opp.id }}" onsubmit="return confirm('{{ ui.delete_confirm }}')">
             <button type="submit" class="btn-del">✕</button>
           </form>
         </div>
       </div>
       {% endfor %}
     {% else %}
-      <div class="empty-row">Nenhuma oportunidade criada. <a href="/admin/nova" style="color:var(--blue)">Criar a primeira →</a></div>
+      <div class="empty-row">{{ ui.no_results }} <a href="/admin/nova" style="color:var(--blue)">{{ ui.new_opp }} →</a></div>
     {% endif %}
   </div>
 </div>
