@@ -15,16 +15,16 @@ a{text-decoration:none;color:inherit}
 
 /* Linha 1: Logo (fundo branco) + à direita nada */
 .topbar-row1{
-  display:flex;align-items:stretch;height:52px;
+  display:flex;align-items:center;height:56px;
+  background:#fff;
+  padding:0 1.5rem;
+  border-bottom:2px solid rgba(201,168,76,0.3);
 }
 .topbar-logo-wrap{
-  background:#fff;
-  padding:6px 20px;
   display:flex;align-items:center;
-  border-right:1px solid rgba(201,168,76,0.2);
-  flex-shrink:0;
+  text-decoration:none;
 }
-.topbar-logo-wrap img{height:38px;width:auto;display:block}
+.topbar-logo-wrap img{height:40px;width:auto;display:block}
 .topbar-row1-right{flex:1}
 
 /* Linha 2: Bandeiras (esquerda) + Portal/Admin (direita, mesmo nível) */
@@ -76,7 +76,6 @@ a{text-decoration:none;color:inherit}
     <a href="/" class="topbar-logo-wrap">
       <img src="/static/adpi-logo-nav.png" alt="ADPI"/>
     </a>
-    <div class="topbar-row1-right"></div>
   </div>
   <div class="topbar-row2">
     <div class="lang-bar">
