@@ -203,7 +203,14 @@ select.fi{cursor:pointer}
           </div>
           {% if opp and opp.docs %}
           <div class="ed">
-            {% for d in opp.docs %}<div class="ed-i">📄 {{ d.original }}</div>{% endfor %}
+            {% for d in opp.docs %}
+            <div class="ed-i" style="justify-content:space-between">
+              <span>📄 {{ d.original }}</span>
+              <form method="post" action="/admin/remover-doc/{{ opp.id }}/{{ d.filename }}" style="display:inline;margin-left:8px">
+                <button type="submit" style="background:#a0281e;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">✕</button>
+              </form>
+            </div>
+            {% endfor %}
           </div>
           {% endif %}
         </div>

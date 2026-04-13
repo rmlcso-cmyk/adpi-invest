@@ -385,6 +385,17 @@ def remover_foto(opp_id, filename):
         except: pass
     return redirect(url_for('admin_editar', opp_id=opp_id))
 
+@app.route('/admin/remover-doc/<int:opp_id>/<filename>', methods=['POST'])
+@login_required
+def remover_doc(opp_id, filename):
+    opp = parse_opp(get_opp(opp_id))
+    if opp:
+        docs = [d for d in opp['docs'] if d['filename'] != filename]
+        update_opp_media(opp_id, opp['photos'], docs)
+        try: os.remove(os.path.join(UPLOAD_FOLDER, filename))
+        except: pass
+    return redirect(url_for('admin_editar', opp_id=opp_id))
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
