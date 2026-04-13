@@ -13,6 +13,7 @@ LANGUAGES = {
     'ar': {'name': 'AR', 'flag': '🇦🇪', 'rtl': True,  'full': 'العربية'},
 }
 
+# Tudo em PT — Google traduz para os outros idiomas
 UI_PT = {
     'investor_portal': 'Portal',
     'admin_access': 'Admin',
@@ -29,15 +30,16 @@ UI_PT = {
     'opportunity': 'oportunidade(s)',
     'see_details': 'Ver detalhes',
     'min': 'mín.',
-    'available': 'Disponível',
-    'in_analysis': 'Em análise',
-    'reserved': 'Reservado',
-    'back': '← Voltar',
+    'estado_disponivel': 'Disponível',
+    'estado_analise': 'Em análise',
+    'estado_reservado': 'Reservado',
+    'back': 'Voltar',
     'description': 'Descrição da oportunidade',
     'project_data': 'Dados do projeto',
     'min_investment': 'Investimento mínimo',
     'location': 'Localização',
     'area': 'Área',
+    'hectares': 'ha',
     'jobs': 'Postos de trabalho',
     'expected_return': 'Retorno esperado',
     'horizon': 'Horizonte temporal',
@@ -46,7 +48,6 @@ UI_PT = {
     'download_pdf': 'Download PDF Brochura',
     'contact_team': 'Contactar equipa ADPI',
     'direct': 'diretos',
-    'hectares': 'ha',
     'footer_contact': 'investimento@adpi.pt · +351 266 000 000 · Cascais / Lisboa',
     'no_results': 'Nenhuma oportunidade encontrada.',
     'clear_filters': 'Limpar filtros',
@@ -56,10 +57,10 @@ UI_PT = {
     'login_btn': 'Entrar',
     'login_title': 'Acesso Restrito',
     'login_sub': 'Área reservada à equipa ADPI.',
-    'back_portal': '← Voltar ao portal',
+    'back_portal': 'Voltar ao portal',
     'dashboard_title': 'Dashboard ADPI Admin',
     'dashboard_sub': 'Gestão das oportunidades publicadas no portal',
-    'new_opp': '+ Nova Oportunidade',
+    'new_opp': 'Nova Oportunidade',
     'logout': 'Sair',
     'total_opps': 'Total de Oportunidades',
     'total_invest': 'Investimento Total',
@@ -79,12 +80,12 @@ UI_PT = {
     'save': 'Guardar alterações',
     'publish': 'Publicar oportunidade',
     'main_info': 'Informação principal',
-    'title_label': 'Título / Designação *',
-    'sector_label': 'Sector *',
-    'municipio_label': 'Município *',
+    'title_label': 'Título / Designação',
+    'sector_label': 'Sector',
+    'municipio_label': 'Município',
     'fase_label': 'Fase ADPI',
     'estado_label': 'Estado',
-    'desc_label': 'Descrição *',
+    'desc_label': 'Descrição',
     'financial_data': 'Dados financeiros e dimensão',
     'invest_label': 'Investimento mínimo (€)',
     'area_label': 'Área (hectares)',
@@ -93,11 +94,18 @@ UI_PT = {
     'horizon_label': 'Horizonte temporal',
     'media_title': 'Imagens e documentos',
     'photos_label': 'Fotografias do projeto',
-    'docs_label': 'Documentos (brochuras, estudos)',
-    'add_photos': 'Clique para adicionar fotos',
-    'add_docs': 'Clique para adicionar documentos',
+    'docs_label': 'Documentos',
+    'add_photos': 'Adicionar fotos',
+    'add_docs': 'Adicionar documentos',
     'select_sector': 'Selecionar sector...',
     'select_mun': 'Selecionar...',
+    # PDF labels
+    'pdf_confidential': 'Confidencial',
+    'pdf_generated': 'Documento gerado em',
+    'pdf_page': 'Pág',
+    'pdf_of': 'de',
+    'fase_label_pdf': 'Fase',
+    'sector_label_pdf': 'Sector',
 }
 
 def _google(text, lang):
@@ -131,18 +139,17 @@ def translate_ui(lang):
     return result
 
 def translate_opp(opp, lang):
+    """Traduz titulo, descricao, sector e estado. Guarda PT originals para PDF."""
     if lang == 'pt': return opp
     o = dict(opp)
+    # guardar originais PT
+    o['titulo_pt']    = opp.get('titulo', '')
+    o['descricao_pt'] = opp.get('descricao', '')
+    o['sector_pt']    = opp.get('sector', '')
+    o['estado_pt']    = opp.get('estado', '')
+    # traduzir
     o['titulo']    = _google(opp.get('titulo', ''), lang)
     o['descricao'] = _google(opp.get('descricao', ''), lang)
-    return o
-
-def translate_opp_with_original(opp, lang):
-    """Traduz oportunidade mas guarda descricao original em PT para o PDF."""
-    if lang == 'pt':
-        return opp
-    o = dict(opp)
-    o['descricao_pt'] = opp.get('descricao', '')  # guardar original PT para PDF
-    o['titulo']    = _google(opp.get('titulo', ''), lang)
-    o['descricao'] = _google(opp.get('descricao', ''), lang)
+    o['sector']    = _google(opp.get('sector', ''), lang)
+    o['estado']    = _google(opp.get('estado', ''), lang)
     return o

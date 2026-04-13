@@ -87,11 +87,11 @@
   <div class="grid">
     {% for opp in opportunities %}
     {% set fc = 'f10' if '1.0' in opp.get('fase','') else 'f20' %}
-    {% set raw_estado = opp.estado|lower %}
-    {% set ec = 'e-dsp' if 'dispo' in raw_estado or 'avail' in raw_estado or 'verfüg' in raw_estado or 'disp' in raw_estado else ('e-anl' if 'anal' in raw_estado or 'analy' in raw_estado or 'analys' in raw_estado else 'e-rsv') %}
-    {% set icons = {'Imobiliário':'🏙','Infraestrutura':'🏗','Energia':'⚡','Private':'💼','Blue':'🌊','Agricultura':'🌾','Digital':'📡','Créditos':'🌳'} %}
+    {% set estado_pt = opp.get('estado_pt', opp.estado)|lower %}
+    {% set ec = 'e-dsp' if 'dispo' in estado_pt else ('e-anl' if 'anal' in estado_pt else 'e-rsv') %}
+    {% set icons = {'Imobiliário':'🏙','Infraestrutura':'🏗','Energia':'⚡','Private':'💼','Blue':'🌊','Agricultura':'🌾','Digital':'📡','Créditos':'🌳','Immo':'🏙','Infra':'🏗','Energ':'⚡','Agri':'🌾'} %}
     {% set icon = namespace(val='🌿') %}
-    {% for k,v in icons.items() %}{% if k in opp.sector %}{% set icon.val = v %}{% endif %}{% endfor %}
+    {% for k,v in icons.items() %}{% if k in opp.get('sector_pt', opp.sector) %}{% set icon.val = v %}{% endif %}{% endfor %}
     <div class="card">
       <div class="card-img">
         {% if opp.photos %}<img src="/uploads/{{ opp.photos[0].filename }}" alt="{{ opp.titulo }}"/>
@@ -102,7 +102,7 @@
       <div class="card-body">
         <div class="card-sector">{{ opp.sector }}</div>
         <div class="card-title">{{ opp.titulo }}</div>
-        <div class="card-loc">📍 {{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} {{ ui.hectares }}{% endif %}</div>
+        <div class="card-loc">{{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} {{ ui.hectares }}{% endif %}</div>
         <div class="card-footer">
           <div class="card-val">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}<small> {{ ui.min }}</small></div>
           <a href="/oportunidade/{{ opp.id }}" class="btn-ver">{{ ui.see_details }} →</a>
@@ -113,7 +113,7 @@
   </div>
   {% else %}
   <div class="empty">
-    <p style="font-size:36px;margin-bottom:12px;opacity:0.3">🔍</p>
+    <p style="font-size:36px;margin-bottom:12px;opacity:0.3">&#128269;</p>
     <p>{{ ui.no_results }}</p>
     {% if q or sector or fase %}<p style="margin-top:8px"><a href="/" style="color:var(--blue)">{{ ui.clear_filters }}</a></p>{% endif %}
   </div>
