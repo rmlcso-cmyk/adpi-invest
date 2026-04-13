@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Oportunidades de Investimento — ADPI{% endblock %}
+{% block extra_style %}
+.hero{background:var(--navy);padding:3rem 2rem 2.5rem;position:relative;overflow:hidden}
+.hero::after{content:'ADPI';position:absolute;right:-20px;bottom:-40px;font-size:160px;font-weight:800;color:rgba(201,168,76,0.04);letter-spacing:0.1em;pointer-events:none}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.hero h1{font-size:2rem;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.2}
+.hero h1 span{color:var(--gold)}
+.hero p{font-size:13px;color:rgba(255,255,255,0.5);max-width:580px;line-height:1.7}
+.hero-phases{display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap}
+.phase-pill{
+  padding:4px 14px;border-radius:20px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;text-decoration:none;
+}
+.phase-pill.p1{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
+.phase-pill.p1:hover,.phase-pill.p1.active{background:var(--gold);color:var(--navy)}
+.phase-pill.p2{background:rgba(26,95,168,0.2);color:#7ab2e8;border:1px solid rgba(26,95,168,0.4)}
+.phase-pill.p2:hover,.phase-pill.p2.active{background:var(--blue);color:#fff}
+.phase-pill.all{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15)}
+.phase-pill.all:hover,.phase-pill.all.active{background:rgba(255,255,255,0.15);color:#fff}
+
+.filters{background:#fff;border-bottom:1px solid var(--border);padding:0.75rem 2rem}
+.filters-inner{max-width:1100px;margin:0 auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.chip{padding:4px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;text-decoration:none;transition:all 0.12s}
+.chip:hover,.chip.active{background:var(--navy-ll);color:#fff;border-color:var(--navy-ll)}
+.search-form{margin-left:auto;display:flex;gap:6px}
+.search-form input{padding:6px 14px;border-radius:20px;border:1px solid var(--border);font-size:12px;outline:none;width:200px}
+.search-form input:focus{border-color:var(--navy)}
+.search-form button{padding:6px 14px;border-radius:20px;background:var(--navy);color:#fff;border:none;font-size:12px;cursor:pointer}
+
+.grid-wrap{max-width:1100px;margin:0 auto;padding:1.5rem 2rem}
+.grid-meta{font-size:12px;color:var(--hint);margin-bottom:1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.15s,transform 0.15s;display:flex;flex-direction:column}
+.card:hover{border-color:var(--navy);transform:translateY(-2px)}
+.card-img{height:170px;background:var(--navy);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.card-img img{width:100%;height:100%;object-fit:cover}
+.card-img .no-img{font-size:52px;opacity:0.12;color:#fff}
+.fase-badge{position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.06em}
+.fase-10{background:rgba(201,168,76,0.9);color:var(--navy)}
+.fase-20{background:rgba(26,95,168,0.9);color:#fff}
+.estado-badge{position:absolute;top:10px;right:10px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600}
+.estado-disponivel{background:#e6f4ea;color:#1a5c2a}
+.estado-analise{background:#fef3dc;color:#7a4e00}
+.estado-reservado{background:#e8f0fb;color:#1a4a9a}
+
+.card-body{padding:1rem;flex:1;display:flex;flex-direction:column}
+.card-sector{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.card-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.3}
+.card-loc{font-size:11px;color:var(--muted);margin-bottom:10px}
+.card-footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border)}
+.card-val{font-size:15px;font-weight:700;color:var(--navy)}
+.card-val small{font-size:10px;font-weight:400;color:var(--hint)}
+.btn-ver{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:6px;background:var(--navy);color:#fff;font-size:11px;font-weight:600;text-decoration:none;transition:background 0.15s}
+.btn-ver:hover{background:var(--navy-ll)}
+
+.empty{text-align:center;padding:4rem 2rem;color:var(--hint)}
+.empty .e-icon{font-size:48px;margin-bottom:12px;opacity:0.3}
+
+.footer{background:var(--navy);color:rgba(255,255,255,0.4);padding:2rem;font-size:12px;line-height:1.8;margin-top:3rem}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-brand{font-size:18px;font-weight:700;color:var(--gold);letter-spacing:0.12em}
+.footer-sub{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.1em;text-transform:uppercase}
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Abu Dhabi · Portugal Investment Platform</div>
+    <h1>Oportunidades de <span>Investimento</span><br>em Portugal</h1>
+    <p>Acesso privilegiado a oportunidades selecionadas nas áreas de imobiliário, infraestrutura, energia, blue economy, agricultura e private equity — alinhadas com os mandatos de ADIA, Mubadala e ADQ.</p>
+    <div class="hero-phases">
+      <a href="/" class="phase-pill all {% if not fase %}active{% endif %}">Todas as fases</a>
+      <a href="/?fase=Phase+1.0{% if sector %}&sector={{ sector }}{% endif %}" class="phase-pill p1 {% if fase == 'Phase 1.0' %}active{% endif %}">Phase 1.0 — Real Estate</a>
+      <a href="/?fase=Phase+2.0{% if sector %}&sector={{ sector }}{% endif %}" class="phase-pill p2 {% if fase == 'Phase 2.0' %}active{% endif %}">Phase 2.0 — Infraestrutura & Outros</a>
+    </div>
+  </div>
+</div>
+
+<div class="filters">
+  <div class="filters-inner">
+    <a href="/?{% if fase %}fase={{ fase }}&{% endif %}" class="chip {% if not sector %}active{% endif %}">Todos os sectores</a>
+    {% for s in sectors %}
+    <a href="/?sector={{ s }}{% if fase %}&fase={{ fase }}{% endif %}" class="chip {% if sector and sector.lower() in s.lower() %}active{% endif %}">{{ s }}</a>
+    {% endfor %}
+    <form class="search-form" method="get">
+      {% if sector %}<input type="hidden" name="sector" value="{{ sector }}"/>{% endif %}
+      {% if fase %}<input type="hidden" name="fase" value="{{ fase }}"/>{% endif %}
+      <input type="text" name="q" value="{{ q }}" placeholder="Pesquisar oportunidades..."/>
+      <button type="submit">Pesquisar</button>
+    </form>
+  </div>
+</div>
+
+<div class="grid-wrap">
+  <div class="grid-meta">{{ opportunities|length }} oportunidade{{ 's' if opportunities|length != 1 else '' }} encontrada{{ 's' if opportunities|length != 1 else '' }}</div>
+  {% if opportunities %}
+  <div class="grid">
+    {% for opp in opportunities %}
+    {% set fase_class = 'fase-10' if '1.0' in opp.get('fase','') else 'fase-20' %}
+    {% set estado_class = 'estado-disponivel' if opp.estado == 'Disponível' else ('estado-analise' if opp.estado == 'Em análise' else 'estado-reservado') %}
+    {% set icons = {'Imobiliário':'🏙','Infraestrutura':'🏗','Energia':'⚡','Private':'💼','Blue':'🌊','Agricultura':'🌾','Digital':'📡','Créditos':'🌳'} %}
+    {% set icon = namespace(val='🌿') %}
+    {% for k,v in icons.items() %}{% if k in opp.sector %}{% set icon.val = v %}{% endif %}{% endfor %}
+    <div class="card">
+      <div class="card-img">
+        {% if opp.photos %}<img src="/uploads/{{ opp.photos[0].filename }}" alt="{{ opp.titulo }}"/>
+        {% else %}<div class="no-img">{{ icon.val }}</div>{% endif %}
+        <span class="fase-badge {{ fase_class }}">{{ opp.get('fase','Phase 1.0') }}</span>
+        <span class="estado-badge {{ estado_class }}">{{ opp.estado }}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-sector">{{ opp.sector }}</div>
+        <div class="card-title">{{ opp.titulo }}</div>
+        <div class="card-loc">📍 {{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} ha{% endif %}</div>
+        <div class="card-footer">
+          <div class="card-val">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}<small> mín.</small></div>
+          <a href="/oportunidade/{{ opp.id }}" class="btn-ver">Ver detalhes →</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="e-icon">🔍</div>
+    <p>Nenhuma oportunidade encontrada.</p>
+    {% if q or sector or fase %}<p style="margin-top:8px"><a href="/" style="color:var(--blue)">Limpar filtros</a></p>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">ADPI</div>
+      <div class="footer-sub">Abu Dhabi · Portugal Investment Platform</div>
+    </div>
+    <div style="text-align:right">
+      investimento@adpi.pt · +351 266 000 000<br/>
+      Cascais / Lisboa · Portugal
+    </div>
+  </div>
+</div>
+{% endblock %}

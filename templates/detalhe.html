@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block title %}{{ opp.titulo }} — ADPI{% endblock %}
+{% block extra_style %}
+.hero-det{background:var(--navy);padding:2rem;color:#fff}
+.hero-det-inner{max-width:960px;margin:0 auto}
+.breadcrumb{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px}
+.breadcrumb a{color:rgba(255,255,255,0.4)}
+.breadcrumb a:hover{color:var(--gold)}
+.hero-det h1{font-size:1.6rem;font-weight:700;margin-bottom:6px;line-height:1.25}
+.fase-tag{display:inline-block;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.07em;margin-right:8px}
+.fase-10{background:rgba(201,168,76,0.9);color:var(--navy)}
+.fase-20{background:rgba(26,95,168,0.85);color:#fff}
+.sector-tag{font-size:12px;color:rgba(255,255,255,0.45)}
+
+.body-wrap{max-width:960px;margin:1.5rem auto;padding:0 1.5rem;display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:1.25rem}
+.gallery img{width:100%;height:130px;object-fit:cover;border-radius:7px;border:1px solid var(--border)}
+.no-gallery{height:180px;background:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:64px;opacity:0.12;margin-bottom:1.25rem}
+.sec-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+.sec-title{font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--hint);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.desc{font-size:13px;color:var(--muted);line-height:1.75}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--bg);border-radius:7px;padding:10px 12px}
+.kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--hint);margin-bottom:3px}
+.kpi-v{font-size:13px;font-weight:700;color:var(--ink)}
+.kpi-v.big{font-size:17px;color:var(--navy)}
+.docs-list{display:flex;flex-direction:column;gap:6px}
+.doc-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:7px;font-size:12px;color:var(--muted)}
+
+.sidebar{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.25rem;position:sticky;top:70px}
+.est-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:1rem}
+.est-dsp{background:#e6f4ea;color:#1a5c2a}
+.est-anl{background:#fef3dc;color:#7a4e00}
+.est-rsv{background:#e8f0fb;color:#1a4a9a}
+.invest-v{font-size:1.8rem;font-weight:800;color:var(--navy);margin-bottom:4px}
+.invest-sub{font-size:11px;color:var(--hint);margin-bottom:1.25rem}
+.btn-pdf{width:100%;padding:12px;border-radius:7px;background:var(--gold);color:var(--navy);border:none;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s;margin-bottom:8px;font-family:inherit}
+.btn-pdf:hover{background:var(--gold-border)}
+.btn-contact{width:100%;padding:10px;border-radius:7px;background:var(--navy);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.btn-contact:hover{background:var(--navy-ll)}
+.contact-info{margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.8}
+.contact-info strong{color:var(--ink);display:block;margin-bottom:4px}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--blue);margin-bottom:1rem}
+.back-link:hover{text-decoration:underline}
+@media(max-width:680px){.body-wrap{grid-template-columns:1fr}}
+{% endblock %}
+
+{% block content %}
+<div class="hero-det">
+  <div class="hero-det-inner">
+    <div class="breadcrumb"><a href="/">ADPI Portal</a> / {{ opp.sector }}</div>
+    <h1>{{ opp.titulo }}</h1>
+    {% set fc = 'fase-10' if '1.0' in opp.get('fase','') else 'fase-20' %}
+    <span class="fase-tag {{ fc }}">{{ opp.get('fase','Phase 1.0') }}</span>
+    <span class="sector-tag">{{ opp.sector }} · 📍 {{ opp.municipio }}{% if opp.area %} · {{ opp.area|int }} ha{% endif %}</span>
+  </div>
+</div>
+
+<div class="body-wrap">
+  <div>
+    <a href="/" class="back-link">← Voltar às oportunidades</a>
+    {% if opp.photos %}
+    <div class="gallery">
+      {% for p in opp.photos %}<img src="/uploads/{{ p.filename }}" alt="{{ opp.titulo }}"/>{% endfor %}
+    </div>
+    {% else %}<div class="no-gallery">🌿</div>{% endif %}
+
+    <div class="sec-card">
+      <div class="sec-title">Descrição da oportunidade</div>
+      <p class="desc">{{ opp.descricao }}</p>
+    </div>
+
+    <div class="sec-card">
+      <div class="sec-title">Dados do projeto</div>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-l">Investimento mínimo</div><div class="kpi-v big">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div></div>
+        <div class="kpi"><div class="kpi-l">Localização</div><div class="kpi-v">{{ opp.municipio }}</div></div>
+        {% if opp.area %}<div class="kpi"><div class="kpi-l">Área</div><div class="kpi-v">{{ opp.area|int }} ha</div></div>{% endif %}
+        {% if opp.jobs %}<div class="kpi"><div class="kpi-l">Postos de trabalho</div><div class="kpi-v">{{ opp.jobs }} diretos</div></div>{% endif %}
+        {% if opp.retorno %}<div class="kpi"><div class="kpi-l">Retorno esperado</div><div class="kpi-v">{{ opp.retorno }}</div></div>{% endif %}
+        {% if opp.horizonte %}<div class="kpi"><div class="kpi-l">Horizonte temporal</div><div class="kpi-v">{{ opp.horizonte }}</div></div>{% endif %}
+      </div>
+    </div>
+
+    {% if opp.docs %}
+    <div class="sec-card">
+      <div class="sec-title">Documentos disponíveis</div>
+      <div class="docs-list">
+        {% for d in opp.docs %}
+        <div class="doc-item">📄 {{ d.original }}<a href="/uploads/{{ d.filename }}" download style="margin-left:auto;font-size:11px;color:var(--blue)">⬇ Download</a></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="sidebar">
+      {% set ec = 'est-dsp' if opp.estado=='Disponível' else ('est-anl' if opp.estado=='Em análise' else 'est-rsv') %}
+      <span class="est-badge {{ ec }}">{{ opp.estado }}</span>
+      <div class="invest-v">€ {{ "{:,.0f}".format(opp.investimento).replace(",",".") }}</div>
+      <div class="invest-sub">Investimento mínimo estimado</div>
+      <button class="btn-pdf" onclick="gerarPDF()">⬇ Download PDF Brochura</button>
+      <button class="btn-contact" onclick="document.getElementById('ct').scrollIntoView({behavior:'smooth'})">Contactar equipa ADPI</button>
+      <div class="contact-info" id="ct">
+        <strong>ADPI — Abu Dhabi Portugal Investment</strong>
+        investimento@adpi.pt<br/>
+        +351 266 000 000<br/>
+        Cascais · Lisboa · Portugal
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const {jsPDF}=window.jspdf;
+const opp={{ opp|tojson }};
+
+function gerarPDF(){
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,H=297,m=20;
+  const navy=[10,22,40],navyl=[19,32,64],gold=[201,168,76],white=[255,255,255],gray=[100,100,100],ink=[26,26,26],lightgray=[248,249,252];
+
+  const rgb=a=>doc.setFillColor(...a);
+  const txt=a=>doc.setTextColor(...a);
+  const drw=a=>doc.setDrawColor(...a);
+
+  // CAPA
+  rgb(navy); doc.rect(0,0,W,H,'F');
+  rgb(navyl); doc.rect(0,0,W,75,'F');
+  // Gold line
+  rgb(gold); doc.rect(0,93,W,1.5,'F');
+
+  // ADPI text logo
+  txt(gold); doc.setFontSize(36); doc.setFont('helvetica','bold');
+  doc.text('ADPI',m,52);
+  txt([255,255,255,0.3*255]); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.setTextColor(180,180,180);
+  doc.text('ABU DHABI · PORTUGAL INVESTMENT PLATFORM',m,60);
+
+  // Fase badge
+  const isp1=opp.fase&&opp.fase.includes('1.0');
+  rgb(isp1?gold:[26,95,168]);
+  doc.roundedRect(m,68,isp1?52:52,7,2,2,'F');
+  txt(isp1?navy:white); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+  doc.text(opp.fase||'Phase 1.0',m+4,73);
+
+  // Sector
+  doc.setTextColor(150,170,200); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(opp.sector.toUpperCase(),m,84);
+
+  // Title
+  txt(white); doc.setFontSize(22); doc.setFont('helvetica','bold');
+  const tl=doc.splitTextToSize(opp.titulo,W-2*m);
+  doc.text(tl,m,112);
+
+  // Location
+  doc.setTextColor(160,180,160); doc.setFontSize(11); doc.setFont('helvetica','normal');
+  doc.text('📍 '+opp.municipio+(opp.area?' · '+Math.round(opp.area)+' ha':''),m,119+tl.length*9);
+
+  // Investment box
+  const bY=158;
+  rgb([19,32,64]); doc.rect(m,bY,W-2*m,30,'F');
+  doc.setTextColor(150,170,200); doc.setFontSize(8);
+  doc.text('INVESTIMENTO MÍNIMO ESTIMADO',m+6,bY+10);
+  txt(gold); doc.setFontSize(24); doc.setFont('helvetica','bold');
+  doc.text('€ '+opp.investimento.toLocaleString('pt-PT'),m+6,bY+24);
+
+  // KPIs
+  const kpis=[
+    {l:'Área',v:opp.area?Math.round(opp.area)+' ha':'—'},
+    {l:'Postos de Trabalho',v:opp.jobs?opp.jobs+' diretos':'—'},
+    {l:'Retorno Esperado',v:opp.retorno||'—'},
+    {l:'Horizonte',v:opp.horizonte||'—'}
+  ];
+  const kW=(W-2*m-9)/4;
+  kpis.forEach((k,i)=>{
+    const kx=m+i*(kW+3);
+    rgb(navyl); doc.rect(kx,205,kW,20,'F');
+    doc.setTextColor(130,155,180); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(k.l,kx+4,212);
+    txt(white); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text(k.v.toString().substring(0,16),kx+4,220);
+  });
+
+  // Footer capa
+  doc.setTextColor(80,100,130); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  doc.text('Documento gerado em '+new Date().toLocaleDateString('pt-PT')+' · Confidencial',m,H-14);
+  doc.text('investimento@adpi.pt · +351 266 000 000 · Cascais / Lisboa',m,H-9);
+  txt(gold); doc.setFontSize(7); doc.text('ADPI Platform',W-m-22,H-9);
+
+  // PAGE 2
+  doc.addPage();
+  rgb(navy); doc.rect(0,0,W,18,'F');
+  txt(gold); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text('ADPI',m,12);
+  doc.setTextColor(180,180,180); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text(opp.titulo+' — Ficha Técnica',m+18,12);
+  txt(gold); doc.setFontSize(7); doc.text('Pág. 2/2',W-m-14,12);
+
+  let y=30;
+
+  // Descrição
+  rgb(navy); doc.rect(m,y,W-2*m,8,'F');
+  txt(white); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('DESCRIÇÃO DA OPORTUNIDADE',m+4,y+5.5);
+  y+=14;
+  txt(ink); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  const dl=doc.splitTextToSize(opp.descricao||'',W-2*m);
+  doc.text(dl.slice(0,14),m,y);
+  y+=Math.min(dl.length,14)*4.5+12;
+
+  // Dados
+  rgb(navy); doc.rect(m,y,W-2*m,8,'F');
+  txt(white); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('DADOS DO PROJETO',m+4,y+5.5);
+  y+=14;
+
+  const fields=[
+    ['Fase',opp.fase||'Phase 1.0'],['Sector',opp.sector],
+    ['Município',opp.municipio],['Área',opp.area?Math.round(opp.area)+' ha':'—'],
+    ['Investimento Mínimo','€ '+opp.investimento.toLocaleString('pt-PT')],
+    ['Postos de Trabalho',opp.jobs?opp.jobs+' diretos':'—'],
+    ['Retorno Esperado',opp.retorno||'—'],['Horizonte Temporal',opp.horizonte||'—'],
+    ['Estado',opp.estado]
+  ];
+  const half=Math.ceil(fields.length/2);
+  const cw=(W-2*m-8)/2;
+  fields.forEach((f,i)=>{
+    const col=i<half?0:1;
+    const row=i<half?i:i-half;
+    const fx=m+col*(cw+8);
+    const fy=y+row*16;
+    rgb(lightgray); doc.rect(fx,fy,cw,13,'F');
+    drw([220,225,235]); doc.setLineWidth(0.2); doc.rect(fx,fy,cw,13);
+    txt(gray); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(f[0],fx+4,fy+5.5);
+    const isInv=f[0]==='Investimento Mínimo';
+    txt(isInv?navy:ink); doc.setFontSize(isInv?9:8.5);
+    doc.setFont('helvetica',isInv?'bold':'normal');
+    doc.text(f[1].substring(0,32),fx+4,fy+11);
+  });
+  y+=half*16+14;
+
+  // Contacto
+  rgb([235,240,250]); doc.rect(m,y,W-2*m,30,'F');
+  drw([180,195,220]); doc.setLineWidth(0.4); doc.rect(m,y,W-2*m,30);
+  txt(navy); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Para mais informações sobre esta oportunidade',m+6,y+10);
+  txt(gray); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+  doc.text('Contacte a equipa ADPI para obter informação detalhada e agendar uma reunião.',m+6,y+17);
+  txt(navy); doc.setFontSize(9);
+  doc.text('investimento@adpi.pt',m+6,y+25);
+  doc.text('+351 266 000 000',m+80,y+25);
+
+  // Footers
+  const totalPages=doc.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    rgb(lightgray); doc.rect(0,H-7,W,7,'F');
+    txt(gray); doc.setFontSize(6.5);
+    doc.text('ADPI © '+new Date().getFullYear()+' · Abu Dhabi Portugal Investment Platform · Confidencial',m,H-2.5);
+    doc.text('Pág '+p+'/'+totalPages,W-m-12,H-2.5);
+  }
+
+  const fname='adpi-'+opp.titulo.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'.pdf';
+  doc.save(fname);
+}
+</script>
+{% endblock %}
