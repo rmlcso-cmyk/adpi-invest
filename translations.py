@@ -117,6 +117,16 @@ UI_PT = {
     'actions_label': 'Ações',
 }
 
+def _sanitize(text):
+    """Fix common Google Translate errors."""
+    # "15-20 years old" should be "15-20 years"
+    import re
+    text = re.sub(r'(\d+[-\u2013]\d+)\s+years?\s+old', r'\1 years', text)
+    text = re.sub(r'(\d+)\s+years?\s+old', r'\1 years', text)
+    # "8-12% per year old" fix
+    text = re.sub(r'per\s+year\s+old', 'per year', text)
+    return text
+
 def _google(text, target_lang, source_lang='pt'):
     if not text or not GOOGLE_API_KEY or target_lang == source_lang:
         return text
@@ -134,6 +144,7 @@ def _google(text, target_lang, source_lang='pt'):
         with urllib.request.urlopen(req, timeout=6) as r:
             res = json.loads(r.read().decode())
             t = res['data']['translations'][0]['translatedText']
+            t = _sanitize(t)
             CACHE[ck] = t
             return t
     except Exception as e:
@@ -148,31 +159,57 @@ def translate_ui(lang):
     CACHE[ck] = result
     return result
 
+def _fix_years(text, lang):
+    """Remove 'old' from year translations."""
+    if not text: return text
+    bad = [' years old', ' year old', ' anos de idade', ' Jahre alt',
+           ' ans de vieux', ' anni di vita', ' años de edad']
+    for b in bad:
+        text = text.replace(b, text.split(b)[0].split()[-1] + ' years' if lang=='en' else text.replace(b,''))
+    # simpler fix
+    for b in [' years old',' year old',' anos de idade',' Jahre alt',' ans de vieux',' anni di vita',' años de edad']:
+        if b in text:
+            text = text.replace(b, ' years' if lang=='en' else
+                                   ' anos' if lang=='pt' else
+                                   ' Jahre' if lang=='de' else
+                                   ' ans' if lang=='fr' else
+                                   ' anni' if lang=='it' else
+                                   ' años' if lang=='es' else '')
+    return text
+
 def translate_opp(opp, target_lang):
-    """Traduz oportunidade do idioma original para target_lang."""
+    """Traduz todos os campos da oportunidade para target_lang."""
     if not opp: return opp
     source_lang = opp.get('content_lang', 'pt')
     o = dict(opp)
-    # Guardar originais PT para PDF
-    o['titulo_orig']    = opp.get('titulo', '')
-    o['descricao_orig'] = opp.get('descricao', '')
-    o['sector_pt']      = opp.get('sector', '')
-    o['estado_pt']      = opp.get('estado', 'Disponivel')
-    if target_lang != source_lang:
-        o['titulo']    = _google(opp.get('titulo',''), target_lang, source_lang)
-        o['descricao'] = _google(opp.get('descricao',''), target_lang, source_lang)
-        o['sector']    = _google(opp.get('sector',''), target_lang, source_lang)
-        o['estado']    = _google(opp.get('estado','Disponível'), target_lang, 'pt')  # estado always stored in PT
-        # Traduzir retorno e horizonte com prefixo de contexto para evitar erros
-        raw_ret = opp.get('retorno','')
-        raw_hor = opp.get('horizonte','')
-        # Traduzir apenas se tiver valor
-        o['retorno']   = _google(raw_ret, target_lang, source_lang) if raw_ret else ''
-        o['horizonte'] = _google(raw_hor, target_lang, source_lang) if raw_hor else ''
-        # Corrigir "years old" -> usar tradução de "anos" isolado
-        o['direct_label'] = _google('diretos', target_lang, 'pt')
-        o['years_label']  = _google('anos', target_lang, 'pt')
-        o['year_label']   = _google('ano', target_lang, 'pt')
-    else:
+
+    # Guardar originais PT (estado e sector estão SEMPRE em PT na BD)
+    o['sector_pt'] = opp.get('sector', '')
+    o['estado_pt'] = opp.get('estado', 'Disponivel')
+
+    if target_lang == source_lang and target_lang == 'pt':
         o['direct_label'] = 'diretos'
+        o['fase_t'] = opp.get('fase', '')
+        return o
+
+    # Traduzir todos os campos de texto
+    o['titulo']    = _google(opp.get('titulo',''), target_lang, source_lang)
+    o['descricao'] = _google(opp.get('descricao',''), target_lang, source_lang)
+
+    # Sector e estado SEMPRE de PT
+    o['sector']    = _google(opp.get('sector',''), target_lang, 'pt')
+    o['estado']    = _google(opp.get('estado','Disponível'), target_lang, 'pt')
+
+    # Fase — traduzir de PT (está sempre em PT)
+    o['fase_t']    = _google(opp.get('fase',''), target_lang, 'pt')
+
+    # Retorno e horizonte — do idioma original
+    raw_ret = opp.get('retorno','')
+    raw_hor = opp.get('horizonte','')
+    o['retorno']   = _fix_years(_google(raw_ret, target_lang, source_lang), target_lang) if raw_ret else ''
+    o['horizonte'] = _fix_years(_google(raw_hor, target_lang, source_lang), target_lang) if raw_hor else ''
+
+    # Labels auxiliares
+    o['direct_label'] = _google('diretos', target_lang, 'pt')
+
     return o

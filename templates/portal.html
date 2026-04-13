@@ -96,7 +96,7 @@
       <div class="card-img">
         {% if opp.photos %}<img src="/uploads/{{ opp.photos[0].filename }}" alt="{{ opp.titulo }}"/>
         {% else %}<div class="no-img">{{ icon.val }}</div>{% endif %}
-        <span class="fase-badge {{ fc }}">{{ opp.get('fase','') }}</span>
+        <span class="fase-badge {{ fc }}">{{ opp.get('fase_t', opp.get('fase','')) }}</span>
         <span class="est-badge {{ ec }}">{{ opp.estado }}</span>
       </div>
       <div class="card-body">
