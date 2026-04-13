@@ -7,7 +7,7 @@ from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, send_from_directory)
 from werkzeug.utils import secure_filename
 import pg8000
-from translations import LANGUAGES, translate_ui, translate_opp, translate_text
+from translations import LANGUAGES, translate_ui, translate_opp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'adpi-secret-2026')
