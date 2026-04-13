@@ -114,7 +114,13 @@ UI_PT = {
     'select_fase': 'Selecionar fase...',
     'opp_label': 'Oportunidade',
     'phase_label': 'Fase',
+    'municipio_col': 'Município',
+    'sector_col': 'Sector',
     'actions_label': 'Ações',
+    'contact_title': 'Contactar a equipa ADPI',
+    'contact_email': 'Email',
+    'contact_phone': 'Telefone',
+    'contact_close': 'Fechar',
 }
 
 def _sanitize(text):

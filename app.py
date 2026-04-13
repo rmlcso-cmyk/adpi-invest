@@ -287,8 +287,9 @@ def admin_login():
             session['admin'] = True
             return redirect(url_for('admin_dashboard'))
         flash('Password incorreta.','error')
-    return render_template('login.html', languages=LANGUAGES, lang=get_lang(),
-                           rtl=False, ui=translate_ui('pt'))
+    lang=get_lang()
+    return render_template('login.html', languages=LANGUAGES, lang=lang,
+                           rtl=LANGUAGES[lang]['rtl'], ui=translate_ui(lang))
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -300,9 +301,10 @@ def admin_logout():
 def admin_dashboard():
     opps = [parse_opp(o) for o in get_all_opps()]
     stats = get_stats()
+    lang=get_lang()
     return render_template('admin_dashboard.html', opportunities=opps, stats=stats,
-                           languages=LANGUAGES, lang=get_lang(), rtl=False,
-                           ui=translate_ui('pt'))
+                           languages=LANGUAGES, lang=lang,
+                           rtl=LANGUAGES[lang]['rtl'], ui=translate_ui(lang))
 
 @app.route('/admin/nova', methods=['GET','POST'])
 @login_required
@@ -329,9 +331,10 @@ def admin_nova():
         create_opp(data)
         flash('Oportunidade publicada com sucesso!','success')
         return redirect(url_for('admin_dashboard'))
+    lang=get_lang()
     return render_template('admin_form.html', opp=None, sectors=SECTORS,
                            municipios=MUNICIPIOS, languages=LANGUAGES,
-                           lang=get_lang(), rtl=False, ui=translate_ui('pt'))
+                           lang=lang, rtl=LANGUAGES[lang]['rtl'], ui=translate_ui(lang))
 
 @app.route('/admin/editar/<int:opp_id>', methods=['GET','POST'])
 @login_required
@@ -359,9 +362,10 @@ def admin_editar(opp_id):
         update_opp_media(opp_id, photos, docs)
         flash('Oportunidade atualizada!','success')
         return redirect(url_for('admin_dashboard'))
+    lang=get_lang()
     return render_template('admin_form.html', opp=opp, sectors=SECTORS,
                            municipios=MUNICIPIOS, languages=LANGUAGES,
-                           lang=get_lang(), rtl=False, ui=translate_ui('pt'))
+                           lang=lang, rtl=LANGUAGES[lang]['rtl'], ui=translate_ui(lang))
 
 @app.route('/admin/eliminar/<int:opp_id>', methods=['POST'])
 @login_required
